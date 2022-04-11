@@ -17,7 +17,7 @@ public enum Instructions
     WORLD_GEN(new String[]{"For the arena, which is put in the world data file:"}),
     ARENA(new String[]{"World: abc", "Bounds: x1,x2/y1,y2/z1,z2", "SpectatorSpawn: x/y/z", "Void: y"}),
 
-    GENERATOR(new String[] {"Generators go in the same file, after the world info."}),
+    GENERATOR(new String[] {"Generators go in the same file (the world data file), after the world info. They take this syntax:"}),
     GENERATOR_INFO(new String[] {"Generator:","Type: Diamond or Emerald", "Spawn: x/y/z", "RegisteredArea: x1,x2/y1,y2/z1,z2"}),
     CASE_SENSITIVE(new String[]{"Please note that the keywords (E.g TeamColor, etc) are case sensitive."}),
     COMMENT(new String[] {"To put a single line comment in the config, use the # symbol followed by what you want to comment.",
@@ -30,7 +30,7 @@ public enum Instructions
     DATA_TWO(new String[]{"Parameters that allow decimal values: Void, SpectatorSpawn, QuickBuySpawn, TeamBuySpawn, ForgeSpawn, TeamSpawn, GeneratorSpawn"}),
 
     COLORS(new String[] {"Possible team colors: red, blue, yellow, white, aqua, gray, pink, green"}),
-    COMMANDS(new String[] {"Commands you'll need: /setup /register /start /unregister /shout"});
+    COMMANDS(new String[] {"Commands you'll need: /setup /register /start /unregister /shout /endgame"});
 
     private final String[] instructions;
 
