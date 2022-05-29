@@ -36,6 +36,8 @@ public class VectorToolBox
     @Author CAMM
     Returns boolean whether a block meets certain parameters, depending on the registered teams, the block
     check type, and the block data.
+    If the block meets the params, then it can be broken safely in the game.
+
     SEE: checkWoodData() and checkColoredData()
 
     isDistinctlyColorable refers to colors.
@@ -44,7 +46,6 @@ public class VectorToolBox
      */
     public static boolean isDataDestructable(byte data, boolean isDistinctlyColorable, Block block, int[] colors)
     {
-
         return isDistinctlyColorable ? checkColoredData(data, block, colors):checkWoodData(data, block);
     }
 
@@ -130,7 +131,10 @@ public class VectorToolBox
             }
         }
 
-        return canBreak && (!block.hasMetadata(MAP_DATA) && !block.hasMetadata(BED_DATA) && !block.hasMetadata(CHEST_DATA));
+        return canBreak &&
+                (!block.hasMetadata(MAP_DATA) &&
+                !block.hasMetadata(BED_DATA) &&
+                !block.hasMetadata(CHEST_DATA));
 
     }
 
@@ -140,6 +144,7 @@ public class VectorToolBox
     /*
     @Author CAMM
    Checks the resistance a block would put up in an explosion.
+   this is a formula from the minecraft wiki.
      */
     public static double calculateResistance(double blockStrength)
     {

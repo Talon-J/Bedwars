@@ -4,6 +4,7 @@ import io.netty.channel.*;
 import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Entities.ShopKeeper;
+import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import net.minecraft.server.v1_8_R3.PacketPlayInUseEntity;
 import net.minecraft.server.v1_8_R3.PacketPlayOutEntityEquipment;
@@ -19,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class PacketHandler extends ItemHelper
 {
@@ -26,6 +28,7 @@ public class PacketHandler extends ItemHelper
     static HashMap<Integer, UUID> invisiblePlayers;
     private final Arena arena;
     private final ArrayList<ShopKeeper> keepers;
+    private ChatSender sender;
 
 
     static {
@@ -39,6 +42,8 @@ public class PacketHandler extends ItemHelper
     {
         this.keepers = shops;
         this.arena = arena;
+        sender = ChatSender.getInstance();
+
     }
 
     public boolean contains(Player player)
@@ -140,10 +145,10 @@ public class PacketHandler extends ItemHelper
 
 
                             if (clicked.getIsTeamKeeper()) {
-                                player.sendMessage("[DEBUG]Open team upgrades");
+                              //  player.sendMessage("[DEBUG]Open team upgrades");
                                 player.openInventory(openingPlayer.getTeam().getTeamInventory());
                             } else {
-                                player.sendMessage("[DEBUG]open quick buy");
+                              //  player.sendMessage("[DEBUG]open quick buy");
                                 player.openInventory(openingPlayer.getShopManager().getQuickBuy());
                             }
                             time = System.currentTimeMillis();
@@ -277,7 +282,13 @@ public class PacketHandler extends ItemHelper
 
         Channel channel = ((CraftPlayer)player).getHandle().playerConnection.networkManager.channel;
         channel.eventLoop().submit(() -> {
-            channel.pipeline().remove(player.getName());
+
+            try {
+                channel.pipeline().remove(player.getName());
+            }
+            catch (RuntimeException e) {
+          sender.sendConsoleMessage("Unable to remove "+player.getName()+" from the packet handler", Level.WARNING);
+            }
         });
         channels.remove(player.getUniqueId());
     }
