@@ -18,6 +18,6 @@ public class EquationException extends ParameterException
 
     @Override
     public String getMessage() {
-        return ChatColor.RED+"Could not resolve value: File:"+file+" Line: "+line+" Expected result:"+expected+" Result: "+result;
+        return ChatColor.RED+"Could not resolve value: File:"+file+" Line: "+line+" Expected:"+expected+" Got: "+result;
     }
 }
