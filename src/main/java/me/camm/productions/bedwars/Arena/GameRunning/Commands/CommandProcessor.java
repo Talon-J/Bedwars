@@ -7,6 +7,7 @@ import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Files.FileStreams.TeamFileReader;
 import me.camm.productions.bedwars.Files.FileStreams.WorldFileReader;
+import me.camm.productions.bedwars.Listeners.PacketHandler;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Validation.BedWarsException;
 import org.bukkit.ChatColor;
@@ -22,7 +23,7 @@ import java.util.UUID;
 import static me.camm.productions.bedwars.Arena.GameRunning.Commands.CommandKeyword.*;
 
 
-/**
+/*
  * @author CAMM
  * This class handles command processing from the game initializer
  */
@@ -37,7 +38,7 @@ public class CommandProcessor {
         messager = ChatSender.getInstance();
     }
 
-    /**
+    /*
      *
      * @param sender commandsender
      * @param plugin plugin
@@ -91,7 +92,7 @@ public class CommandProcessor {
     }
 
 
-    /**
+    /*
      * method for private chatting between team members in a team
      *
      * @param sender commandsender
@@ -124,13 +125,13 @@ public class CommandProcessor {
 
         //send the message
         TeamColor color = current.getTeam().getTeamColor();
-       this.messager.sendPlayerMessage(ChatColor.YELLOW+"[SHOUT]"+color.getChatColor()+"["+color.getName()+"]"+
+       this.messager.sendPlayerMessage(ChatColor.YELLOW+"[SHOUT]"+
                 color.getChatColor()+"<"+current.getRawPlayer().getName()+">"+ChatColor.GRAY+message,null);
 
     }
 
 
-    /**
+    /*
      * Attempts to start the game.
      *
      *
@@ -170,7 +171,7 @@ public class CommandProcessor {
     }
 
 
-    /**
+    /*
      * ends the game manually
      * @param sender command sender
      */
@@ -189,7 +190,7 @@ public class CommandProcessor {
     }
 
 
-    /**
+    /*
      * Attempts to register a player
      *
      *
@@ -210,7 +211,7 @@ public class CommandProcessor {
     }
 
 
-    /**
+    /*
      *
      * @param player sender of the command
      * @throws BedWarsException if several conditions are not met
@@ -233,26 +234,13 @@ public class CommandProcessor {
             throw new StateException("The game is running! You can't unregister now!");
         }
 
-        Arena arena = runner.getArena();
-
-
-
-        if (arena!=null){
-            arena.getTeams().values().forEach((team) -> team.removePlayer(p));
-
-
-            BattlePlayer unregistered = arena.getPlayers().getOrDefault(p.getUniqueId(),null);
-            if (unregistered != null) {
-                arena.unregisterPlayer(p.getUniqueId());
-            }
-        }
-
+         runner.unregisterPlayer(p);
         this.messager.sendMessage(ChatColor.YELLOW+p.getName()+" has unregistered!");
 
     }
 
 
-    /**
+    /*
      * Checks if the player has permission to run a command
      *
      * @param sender sender of the command

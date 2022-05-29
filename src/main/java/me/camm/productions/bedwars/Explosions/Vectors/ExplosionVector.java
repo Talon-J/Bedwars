@@ -12,7 +12,7 @@ import static me.camm.productions.bedwars.Explosions.VectorToolBox.isDataDestruc
 
 
 /**
- * TODO unfinished. Need to refactor.
+ *
  * @author CAMM
  * Models a vector that breaks blocks
  */
@@ -31,16 +31,13 @@ public class ExplosionVector extends GameVector
         this.incendiary = incendiary;
         this.colors = colors;
 
-        if (this.incendiary) //fireballs have explosionpower 3
-            strength = (0.7+(Math.random()*0.6))*5;  //is a fireball
-        else
-            strength = (0.7+(Math.random()*0.6))*5; //is not
+        strength = ((this.incendiary? 2:2.5) + (Math.random()*0.1)) * 5;
     }
 
 
-    public boolean validate()  //checking if a explosion vector has lost all of it's strength
+    public boolean lostStrength()  //checking if a explosion vector has lost all of it's strength
     {
-        return this.strength > 0;
+        return !(this.strength > 0);
     }
 
 
@@ -54,6 +51,8 @@ public class ExplosionVector extends GameVector
 
 
 
+    //for a block, uses it's block resistance to determine if it should be broken.
+    //returns whether a block has been broken
     @SuppressWarnings("deprecation")
     public boolean conflict(Block block)
     {
@@ -103,7 +102,7 @@ public class ExplosionVector extends GameVector
 
       blockResistance = isAir? 0: calculateResistance(blockStrength);
         this.strength -= blockResistance;
-        return this.strength >= blockResistance;
+        return this.strength >= 0;
 
 
     }

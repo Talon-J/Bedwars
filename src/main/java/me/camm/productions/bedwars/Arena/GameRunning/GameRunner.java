@@ -37,7 +37,7 @@ import static me.camm.productions.bedwars.Arena.Players.Scoreboards.ScoreBoardHe
 import static me.camm.productions.bedwars.Arena.GameRunning.Events.EventTime.*;
 
 
-/**
+/*
  * @author CAMM
  * This class is used to run the game. It takes care of the generators, and the player scoreboard updating as
  * well as registering other event handlers.
@@ -246,6 +246,27 @@ public class GameRunner// implements Listener
 
 
     }
+
+
+    public void unregisterPlayer(Player p) {
+
+        if (arena!=null){
+            arena.getTeams().values().forEach((team) -> team.removePlayer(p));
+
+
+            BattlePlayer unregistered = arena.getPlayers().getOrDefault(p.getUniqueId(),null);
+            if (unregistered != null) {
+                arena.unregisterPlayer(p.getUniqueId());
+            }
+        }
+
+        PacketHandler handler = getPacketHandler();
+        if (handler != null) {
+            handler.removePlayer(p);
+        }
+    }
+
+
 
 
     /*
@@ -487,10 +508,12 @@ as a string.
         //Revealing all possible hidden players to other players.
         for (BattlePlayer player: arena.getPlayers().values())
         {
+
             player.teleport(arena.getSpecSpawn());
            Player raw = player.getRawPlayer();
             raw.setAllowFlight(true);
            raw.setFlying(true);
+           packetHandler.removePlayer(raw);
            player.removeInvisibilityEffect();
 
 

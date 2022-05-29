@@ -56,17 +56,17 @@ public final class BedWars extends JavaPlugin
         plugin = this;
         ChatSender sender = ChatSender.getInstance();
 
+
         //we init it right away so that we can use it anywhere.
 
-        sender.sendMessage(ChatColor.GREEN+"STARTING UP");
-        sender.sendMessage(ChatColor.AQUA+"It is recommended that you make a backup of this world before starting the game, if you haven't done so.");
-
-
+        sender.sendConsoleMessage(ChatColor.GREEN+"STARTING UP",Level.INFO);
+        sender.sendConsoleMessage(ChatColor.AQUA+"It is recommended that you make a backup of this world before starting the game, if you haven't done so.",Level.INFO);
         DirectoryCreator fileCreator = new DirectoryCreator(this);
        if (!fileCreator.createFolders())
        {
-           sender.sendPlayerMessage("FILES ARE NOT CONFIGURED. CANNOT CONTINUE UNTIL CONFIGURATION IS COMPLETE.", ChatSender.GameState.ERROR);
-           sender.sendMessage("PLEASE RELOAD THE PLUGIN AFTER CONFIGURATION IS COMPLETE.");
+           sender.sendConsoleMessage("Files are not configured.", Level.WARNING);
+           sender.sendConsoleMessage("Please reload the plugin with /rl after configuration has been completed. ",Level.WARNING);
+           getServer().getPluginManager().disablePlugin(this);
        }
        else
        {
@@ -95,6 +95,7 @@ public final class BedWars extends JavaPlugin
            catch (Exception e)
            {
                sender.sendPlayerMessage("Unable to register the Ender dragon. The game cannot proceed at this point.", ChatSender.GameState.ERROR);
+               getServer().getPluginManager().disablePlugin(this);
            }
        }
 
@@ -124,9 +125,7 @@ public final class BedWars extends JavaPlugin
         }
         catch (Exception e)
         {
-
-            sender.sendPlayerMessage("Failed to unregister the Ender Dragon.", ChatSender.GameState.ERROR);
-            e.printStackTrace();
+            sender.sendConsoleMessage("Failed to unregister Ender Dragon Override.", Level.WARNING);
         }
         
 

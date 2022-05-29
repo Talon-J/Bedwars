@@ -135,7 +135,7 @@ public class Forge implements Runnable {
 
             case 4:
                 spawnTime = (long) (initialTime / 3.5);
-                emeraldChance.setWeight(0.005);
+                //emeraldChance.setWeight(0.005);
                 break;
         }
     }
@@ -180,6 +180,10 @@ public class Forge implements Runnable {
         if (!isAlive || !plugin.isEnabled())
             return;
 
+
+        /*
+        Gold chance is initially very small. We increase it to a max of 0.2
+         */
         goldChance.setWeight(Math.min(goldChance.getWeight() + 0.01, 0.2));
 
         new BukkitRunnable() {

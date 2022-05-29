@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.logging.Level;
 
 
-/**
- This class is used to setup parameters for the game.
+/*
+ This class is used to set-up parameters for the game.
  @author CAMM
  */
 public class GameIntializer implements CommandExecutor
