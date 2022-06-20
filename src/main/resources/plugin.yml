@@ -1,7 +1,8 @@
 name: BedWars
-version: 0.7
+version: 1.0
 main: me.camm.productions.bedwars.BedWars
-authors: [CAMM_H87, Asdf_Noob]
+authors: [CAMM_H87 (Chippy), Asdf_Noob (Stan), Redpils (Red)]
+website: https://github.com/CammHd/Bedwars
 description: A plugin for Bedwars.
 commands:
   setup:

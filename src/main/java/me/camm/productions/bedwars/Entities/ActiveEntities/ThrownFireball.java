@@ -5,6 +5,8 @@ import me.camm.productions.bedwars.Arena.Players.DeathMessages.Cause;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Entities.ActiveEntities.Hierarchy.IGameOwnable;
 import net.minecraft.server.v1_8_R3.EntityFireball;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftFireball;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Fireball;
@@ -15,7 +17,7 @@ import org.bukkit.util.Vector;
 
 import java.util.UUID;
 
-/**
+/*
  * @author CAMM
  * Models a travelling fireball with an owner.
  */
@@ -25,6 +27,14 @@ public class ThrownFireball implements IGameOwnable
     private final BattleTeam team;
     private final BattlePlayer owner;
     private Fireball ball;
+
+    private static final int TIME;
+    private static final double MULTIPLIER;
+
+    static {
+        TIME = 30;
+        MULTIPLIER = 0.15;
+    }
 
     public ThrownFireball(Plugin plugin, BattlePlayer owner) {
         this.plugin = plugin;
@@ -36,18 +46,26 @@ public class ThrownFireball implements IGameOwnable
     private void shoot()
     {
         Player player = owner.getRawPlayer();
+        Location locPlayer = player.getLocation();
+        Location locEye = player.getEyeLocation();
+        World world = player.getWorld();
+
+        //getting this vector gives a position slightly infront of the player.
+        Vector lookDir = locEye.toVector().add(locPlayer.getDirection().clone().multiply(1.25));
+
+        //converting the vector to a location in the world with a pitch and yaw.
+        Location spawnLoc = lookDir.toLocation(world, locPlayer.getYaw(),locPlayer.getPitch());
+
 
         //spawning the ball
-       ball = player.getWorld().spawn(player.getEyeLocation().toVector()
-                .add(player.getLocation().getDirection().multiply(1.25)).toLocation
-                 (player.getWorld(), player.getLocation().getYaw(), player.getLocation().getPitch()),Fireball.class);  //Most likely 1.25
+       ball = world.spawn(spawnLoc, Fireball.class);
 
 
         //Note: set to 0 for physics.
         ball.setYield(0F);
         ball.setShooter(player);
 
-        Vector direction = player.getEyeLocation().getDirection();
+        Vector direction = locEye.getDirection();
 
         double x = direction.getX();
         double y = direction.getY();
@@ -58,10 +76,11 @@ public class ThrownFireball implements IGameOwnable
 
         //converting to unit vector * 0.1 (note that 1 m/tick = 20 m/s, so *0.1 makes it less fast)
         //initially *0.1
-        fireBall.dirX = (x/distance)*0.15;  //getting the unit value ratio then multiply it.
-        fireBall.dirY = (y/distance)*0.15;   //so as long as it is the same ratio for each, it is fine.
-        fireBall.dirZ = (z/distance)*0.15;
+        fireBall.dirX = (x/distance)*MULTIPLIER;  //getting the unit value ratio then multiply it.
+        fireBall.dirY = (y/distance)*MULTIPLIER;   //so as long as it is the same ratio for each, it is fine.
+        fireBall.dirZ = (z/distance)*MULTIPLIER;
 
+        //make sure that the player does not collide with their thrown fireball
         ((CraftPlayer)player).getHandle().collidesWithEntities = false;
 
         new BukkitRunnable()
@@ -69,7 +88,8 @@ public class ThrownFireball implements IGameOwnable
             int time = 0;
             public void run()
             {
-                if (ball.isDead()||time>30)
+                //remove the ball after a period of time.
+                if (ball.isDead()||time>TIME)
                 {
                     ((CraftPlayer)player).getHandle().collidesWithEntities = true;
                     ball.remove();
@@ -81,7 +101,7 @@ public class ThrownFireball implements IGameOwnable
                     time++;
                 }
             }
-        }.runTaskTimer(plugin, 0,5L);
+        }.runTaskTimer(plugin, 0,5);
     }
 
 
