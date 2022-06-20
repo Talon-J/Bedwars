@@ -28,7 +28,6 @@ public class ExecutableBoundaryLoader implements Runnable
     private final ArrayList<TimeSet> coolingTeams;
     private final Thread thread;
     private volatile boolean running;
- //   private volatile boolean waiting;
     private final Arena arena;
 
     private final Collection<BattlePlayer> players;

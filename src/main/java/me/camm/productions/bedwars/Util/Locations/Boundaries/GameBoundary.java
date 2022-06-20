@@ -56,7 +56,7 @@ public class GameBoundary extends Boundary<Integer>
 
     @Override
     protected Integer[] reset() {
-        return new Integer[0];
+        return new Integer[]{0,0,0,0,0,0};
     }
 
     @Override

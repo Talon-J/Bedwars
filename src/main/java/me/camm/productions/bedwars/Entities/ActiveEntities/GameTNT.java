@@ -27,6 +27,10 @@ public class GameTNT implements IGameOwnable
 
     private static final Random random = new Random();
 
+    //1 second = 20 ticks.
+    //tnt explosion time is roughly 3 seconds.
+    private static final int TIME = 60;
+
 
     public GameTNT(BlockPlaceEvent event, BattlePlayer player)
     {
@@ -40,11 +44,12 @@ public class GameTNT implements IGameOwnable
     {
         Block block = event.getBlockPlaced();
         World world;
-        if (event.isCancelled())  //if the event is not cancelled by another plugin [Register block]
+
+        if (event.isCancelled())  //if the event is not cancelled by another plugin
             return;
 
 
-        if (block.getType()!= Material.TNT)
+        if (block.getType()!=Material.TNT)
             return;
 
 
@@ -55,8 +60,8 @@ public class GameTNT implements IGameOwnable
                //
                 tnt.setCustomName(owner.getRawPlayer().getUniqueId().toString());
 
-                tnt.setFuseTicks(54);
-                tnt.setYield(0F); // set yield to 0 so it doesn't interfere with velocity (originally 6)
+                tnt.setFuseTicks(TIME);
+                tnt.setYield(0F); // set yield to 0 so it doesn't interfere with velocity
 
                 //This is basically random velocity for the tnt.
                 tnt.setVelocity(new Vector( ((random.nextDouble()*0.3)-0.15)*0.2,0.3, ((random.nextDouble()*0.3)-0.15)*0.2));

@@ -5,8 +5,6 @@ import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Entities.ActiveEntities.DreamDefender;
 import me.camm.productions.bedwars.Entities.ActiveEntities.ThrownFireball;
-import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
-import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -16,7 +14,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -34,7 +31,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static me.camm.productions.bedwars.Util.Locations.BlockRegisterType.BASE;
 import static me.camm.productions.bedwars.Util.Locations.BlockRegisterType.GENERATOR;
@@ -69,7 +65,6 @@ public class ItemUseListener implements Listener
         this.arena = arena;
         this.handler = handler;
         this.entityListener = entityListener;
-
     }
 
     @EventHandler

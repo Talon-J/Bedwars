@@ -97,11 +97,18 @@ public class VelocityComponent {
         delY = centreMass.getY() - explosionLoc.getY();
         delZ = centreMass.getZ() - explosionLoc.getZ();
 
+
+
         double totalDist = Math.sqrt(delX*delX + delY*delY + delZ*delZ); //hypotenuse for vert angle
         double horDistance = Math.sqrt(delX*delX +delZ*delZ);
-        double totalMagnitude = getTNTVectorMagnitude(totalDist);
 
-        System.out.println("tot mag init: "+totalMagnitude);
+        double totalMagnitude = isFireball ? getFireballVectorMagnitude(totalDist) : getTNTVectorMagnitude(totalDist);
+
+        System.out.println("dist:"+totalDist+"  used fbc: "+isFireball);
+        System.out.println("total mag:"+totalMagnitude);
+
+        if (totalMagnitude == 0)
+            return;
 
         boolean straightUp = false;
         boolean onlyHorizontal = false;
@@ -216,10 +223,6 @@ public class VelocityComponent {
             zVel = horMagnitude * Math.sin(horAngle);
         }
 
-        System.out.println("Vel: "+xVel+" "+yVel+" "+zVel);
-        System.out.println("Vel recnst: "+Math.sqrt(xVel*xVel + yVel*yVel + zVel*zVel));
-
-
 
         //impart the velocity
         impartVelocity(xVel,yVel,zVel, target);
@@ -256,6 +259,27 @@ public class VelocityComponent {
 
             return Math.max(magnitude, 0);
         }
+    }
+
+    private double getFireballVectorMagnitude(double distance) {
+//0.00136847x^5 - 0.0108515x^4 - 0.00874143x^3 + 0.209415x^2 - 0.668084x + 1.78
+        final double max = 1.78;
+
+
+        if (distance <= 1)
+            return max;
+
+        //we need to shift the distance.
+        distance = distance - 1;
+
+        double mag  = 0.00136847 * Math.pow(distance, 5) -
+                0.0108515 * Math.pow(distance, 4) -
+                0.0087143 * Math.pow(distance, 3) +
+                0.209415 * distance * distance -
+                0.668084 * distance +
+                1.78;
+
+        return Math.max(mag, 0);
     }
 
     /*
