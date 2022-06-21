@@ -144,7 +144,7 @@ public class ItemHelper
                 return;
         }
 
-        if (item==SHEARS && player.getShears() != null)
+        if (item==SHEARS && player.hasShears())
             return;
 
 
@@ -161,14 +161,14 @@ public class ItemHelper
                 if (newArmor==null)
                     return;
 
+                if (didNotPay(player, item, isInflated))
+                    return;
+
                 if (enchantment!=null)
                 {
                     for (int slot=0;slot< newArmor.length;slot++)
                         newArmor[slot] = enchant(newArmor[slot],enchantment);
                 }
-
-                if (didNotPay(player, item, isInflated))
-                    return;
 
                 player.setPurchasedArmor(possible == null ? player.getArmor() : possible);
                 setArmor(newArmor, player.getRawPlayer());
@@ -194,7 +194,7 @@ public class ItemHelper
                 if (item== ShopItem.STICK)
                 {
                     enchant(bought, Enchantment.KNOCKBACK, 1);
-                    manager.set(bought,item,player.getRawPlayer());
+                    manager.set(bought,item,player.getRawPlayer(),event);
                    return;
                 }
                 BattleEnchantment enchantment = player.getTeam().getMeleeEnchant();
@@ -242,7 +242,7 @@ public class ItemHelper
                     player.setShears();
                 }
 
-                manager.set(boughtTool, item, player.getRawPlayer());
+                manager.set(boughtTool, item, player.getRawPlayer(),event);
                }
             }
 
@@ -257,16 +257,23 @@ public class ItemHelper
     E.g
 
     Forge with 1 upgrade: index = 1
-    A//
-    B
+    A <-- 0
+    B <-- 1
     C
     D
+
+
+    Creates an item to be displayed in the team upgrades inventory shop.
+    Adds lore and descriptions depending on the amount of upgrades that a player has purchased,
+    if the item is tierable.
      */
         public static ItemStack toTeamDisplayItem(TeamItem item, int index)
         {
             Material mat = item.getMat();
             try {
                 ItemStack sell;
+
+                //if it is colored glass, then create it separately.
                 if (item == TeamItem.SLOT_BARRIER)
                     sell = createColoredGlass(mat, DyeColor.GRAY);
                 else
@@ -276,7 +283,12 @@ public class ItemHelper
                     return null;
 
                 ItemMeta meta = sell.getItemMeta();
+
+                //array of name descriptions that some items may have
                 String[] names = item.getNames();
+
+                //if the index is the max or over, then set it to the max tiered name, else
+                //set it to the name of the current tier
                 if (index >= names.length)
                     meta.setDisplayName(names[names.length-1]);
                 else
@@ -284,14 +296,20 @@ public class ItemHelper
 
 
                 List<String> lore = new ArrayList<>();
+
+                //descriptions for the tiers if applicable
                 String[] descriptions = item.getLore();
 
                 VALID_DESC:
                 {
 
+                    //checking for the description length. If there is no description, then break
                     if (descriptions.length < 1)
                         break VALID_DESC;
 
+                    //if the description index is less than the tier, then
+                    //the max tier is achieved.
+                    //
                     if (descriptions.length - 1 < index)  //3, 2
                     {
                         for (String phrase : descriptions)
@@ -299,16 +317,20 @@ public class ItemHelper
 
                     } else {
 
+                        //otherwise, we need to change the descriptions up to the index.
                         for (int slot = 0; slot < index; slot++) {
                             String phrase = descriptions[slot];
                             lore.add(ChatColor.GOLD + phrase);
                         }
                     }
 
+                    //now, for the rest of the tiers not yet purchased, we set them to aqua instead of gold,
+                    //so show that they are not purchased yet
                     for (int slot = index; slot < descriptions.length; slot++)
                         lore.add(ChatColor.AQUA + descriptions[slot]);
                 }
 
+                //set lore, meta, and return.
                meta.setLore(lore);
                sell.setItemMeta(meta);
 
@@ -316,7 +338,6 @@ public class ItemHelper
             }
             catch (IndexOutOfBoundsException e)
             {
-                e.printStackTrace();
                 return null;
             }
         }
