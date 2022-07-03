@@ -68,6 +68,7 @@ public class BattleTeam
     private final Arena arena;
 
     private final GameBoundary bed;
+    private volatile boolean bedBroken;
     private final Coordinate chest;
     private final GameBoundary box;
     private final GameBoundary aura;
@@ -127,6 +128,7 @@ public class BattleTeam
         this.players = new ConcurrentHashMap<>();
 
         this.isEliminated = false;
+        this.bedBroken = false;
 
         this.activeArmorEnchant = null;
         this.activeMeleeEnchant = null;
@@ -291,6 +293,7 @@ It is up to the calling method to update the scoreboards of the players.
         sendTeamTitle(BED_DESTROYED.getMessage(), LAST_LIFE_WARNING.getMessage(), 10, 40,10);  //Say that their bed has been destroyed
         bed.replace(Material.AIR, Material.BED_BLOCK, bedBreakData, arena.getWorld());
         bed.unregister(BED.getData(), arena.getWorld(), arena.getPlugin());
+        bedBroken = true;
     }
 
 
@@ -335,7 +338,7 @@ It is up to the calling method to update the scoreboards of the players.
             else
                 player.sendMessage(ChatColor.GOLD+"You are currently the only player on this team.");
 
-                while (mates.hasNext()) {
+            while (mates.hasNext()) {
                     BattlePlayer teammate = mates.next();
                     if (!teammate.equals(player)) {
                         player.sendMessage("- "+color+teammate.getRawPlayer().getName());
@@ -585,7 +588,16 @@ It is up to the calling method to update the scoreboards of the players.
 
     public boolean doesBedExist()
     {
-      return bed.doesBoxContainBlock(Material.BED_BLOCK,arena.getWorld());
+        if (!bedBroken) {
+            boolean exists = bed.doesBoxContainBlock(Material.BED_BLOCK, arena.getWorld());
+
+            if (!exists)
+                bedBroken = true;
+
+            return exists;
+        }
+        return false;
+
     }
 
     public synchronized int getRemainingPlayers()

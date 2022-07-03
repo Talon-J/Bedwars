@@ -88,8 +88,9 @@ public class VelocityComponent {
          */
 
         AxisAlignedBB box = ((CraftEntity)target).getHandle().getBoundingBox();
+        double yHalf = (box.e-box.b)/2 + box.b;
         Location centreMass =
-        new Location(entityLoc.getWorld(), (box.d-box.a)/2 + box.a, (box.e-box.b)/2 + box.b,(box.f-box.c)/2 + box.c);
+        new Location(entityLoc.getWorld(), (box.d-box.a)/2 + box.a, (box.e-yHalf)/2 + yHalf,(box.f-box.c)/2 + box.c);
 
 
         double delX, delY, delZ;
@@ -241,6 +242,9 @@ public class VelocityComponent {
         if (distance < 0.5)
             return MAX;
         else {
+
+            if (distance >= VectorParameter.TNT_RANGE.getValue())
+                return 0;
             //this is a function for a graph.
             //we used measurements to get a series of points, then made a graph that best fits those
             //points for the velocity.
@@ -269,6 +273,9 @@ public class VelocityComponent {
         if (distance <= 1)
             return max;
 
+        if (distance >= VectorParameter.FIREBALL_RANGE.getValue())
+            return 0;
+
         //we need to shift the distance.
         distance = distance - 1;
 
@@ -284,11 +291,23 @@ public class VelocityComponent {
 
     /*
     Imparts velocity onto the entity
+
      */
     private void impartVelocity(double xComponent, double yComponent, double zComponent, Entity targeted)
     {
-        Vector velocity = new Vector(xComponent,yComponent,zComponent);
-        targeted.setVelocity(targeted.getVelocity().add(velocity));
+
+        double MAX = VectorParameter.MAX_MAGNITUDE.getValue();
+        Vector calculated = new Vector(xComponent,yComponent,zComponent);
+        Vector entityVel = targeted.getVelocity();
+
+        if (calculated.clone().add(entityVel).lengthSquared() <= (MAX * MAX))
+        {
+            targeted.setVelocity(entityVel.add(calculated));
+            return;
+        }
+
+        Vector sum = calculated.add(entityVel);
+        targeted.setVelocity(sum.normalize().multiply(MAX));
     }
 
 }

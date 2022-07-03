@@ -5,6 +5,7 @@ import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Entities.ActiveEntities.GameDragon;
 import me.camm.productions.bedwars.Entities.ActiveEntities.Hierarchy.IGameTeamable;
 import me.camm.productions.bedwars.Explosions.ExplosionParticle;
+import me.camm.productions.bedwars.Explosions.VectorParameter;
 import me.camm.productions.bedwars.Explosions.Vectors.ExplosionVector;
 import me.camm.productions.bedwars.Explosions.VectorToolBox;
 import me.camm.productions.bedwars.Explosions.VelocityComponent;
@@ -36,14 +37,14 @@ public class ExplosionHandler implements Listener
     private final Plugin plugin;
     private final int[] colors;
     private final Arena arena;
-    private final static int BLOCK_BREAK_RANGE;
+
     private final EntityActionListener actionListener;
 
     private final static Random rand;
 
     static {
         rand = new Random();
-        BLOCK_BREAK_RANGE = 12;
+
     }
 
 
@@ -80,7 +81,7 @@ public class ExplosionHandler implements Listener
         }
 
         if (!doCalculation)
-        return;
+          return;
 
         sendVectors(incendiary,entity,exploded);
 
@@ -108,6 +109,8 @@ public class ExplosionHandler implements Listener
 
         Vector origin = explosionCenter.toVector();
 
+        double damageDist = incendiary ? VectorParameter.FIREBALL_RANGE.getValue() : VectorParameter.TNT_RANGE.getValue();
+
         for (Entity entity : entities) {
             if (!(entity instanceof LivingEntity)) {
                 continue;
@@ -119,9 +122,10 @@ public class ExplosionHandler implements Listener
 
             Vector location = entity.getLocation().toVector();
             Vector direction = location.clone().subtract(origin.clone());
-            double length = direction.length();
+            double length = direction.lengthSquared();
 
-            if (entity.getLocation().distance(explosionCenter) > 8) {
+
+            if (entity.getLocation().distanceSquared(explosionCenter) > (damageDist * damageDist)) {
                 continue;
             }
 
@@ -166,7 +170,7 @@ public class ExplosionHandler implements Listener
 
         double distance = 0;
 
-        while  (distance<BLOCK_BREAK_RANGE)  //8 is arbitrarily the max distance tnt can break blocks.
+        while  (distance<damageDist)  //8 is arbitrarily the max distance tnt can break blocks.
         {
 
             for (int rays=directions.size()-1;rays>0;rays--)
@@ -200,7 +204,7 @@ public class ExplosionHandler implements Listener
             return;
 
 
-            for (Block fireCandidate : fireCandidates) {
+        for (Block fireCandidate : fireCandidates) {
                 //getting block below the air block in the arraylist
                 Block testBlock = fireCandidate.getLocation().subtract(0, 1, 0).getBlock();
                 Material currentMaterial = testBlock.getType();

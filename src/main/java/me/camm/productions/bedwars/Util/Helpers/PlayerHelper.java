@@ -14,12 +14,13 @@ public class PlayerHelper {
     {
         try {
             String previousName;
+            String entry = team.getDisplayScoreboardEntry();
             if (team.isEliminated())
-                previousName = team.getDisplayScoreboardEntry() + " " + TEAM_DEAD.getPhrase();
+                previousName = entry + " " + TEAM_DEAD.getPhrase();
             else if (!team.doesBedExist())
-                previousName = team.getDisplayScoreboardEntry() + " " + team.getRemainingPlayers();
+                previousName = entry + " " + team.getRemainingPlayers();
             else
-                previousName = team.getDisplayScoreboardEntry() + " " + TEAM_ALIVE.getPhrase();
+                previousName = entry + " " + TEAM_ALIVE.getPhrase();
 
             return previousName;
         }
