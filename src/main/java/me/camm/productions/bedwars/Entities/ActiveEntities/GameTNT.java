@@ -29,7 +29,7 @@ public class GameTNT implements IGameOwnable
 
     //1 second = 20 ticks.
     //tnt explosion time is roughly 3 seconds.
-    private static final int TIME = 60;
+    private static final int TIME = 49;
 
 
     public GameTNT(BlockPlaceEvent event, BattlePlayer player)
@@ -53,7 +53,7 @@ public class GameTNT implements IGameOwnable
             return;
 
 
-                world = block.getWorld();
+        world = block.getWorld();
                 block.setType(Material.AIR);
                 tnt = world.spawn(block.getLocation().add(0.5,0,0.5), TNTPrimed.class);
 

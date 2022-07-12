@@ -112,9 +112,10 @@ public class ExplosionHandler implements Listener
         double damageDist = incendiary ? VectorParameter.FIREBALL_RANGE.getValue() : VectorParameter.TNT_RANGE.getValue();
 
         for (Entity entity : entities) {
-            if (!(entity instanceof LivingEntity)) {
+
+            if (!(entity instanceof LivingEntity))
                 continue;
-            }
+
 
             if (!VectorToolBox.isValidDamageType(entity)) {
                 continue;
@@ -133,13 +134,7 @@ public class ExplosionHandler implements Listener
             if (damage < 0)
                 damage = 0;
 
-            if (!VectorToolBox.isValidVelocityType(entity)) {
-                continue;
-            }
 
-            //unfinished. velocity needs reworking.
-            VelocityComponent component = new VelocityComponent(explodeEvent);
-            component.applyVelocity();
 
 
             EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(exploded, entity, EntityDamageEvent.DamageCause.ENTITY_EXPLOSION, damage);
@@ -167,6 +162,9 @@ public class ExplosionHandler implements Listener
             }
 
         }
+
+        VelocityComponent component = new VelocityComponent(explodeEvent);
+        component.applyVelocity();
 
         double distance = 0;
 

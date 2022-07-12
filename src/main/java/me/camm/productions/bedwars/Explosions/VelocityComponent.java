@@ -6,7 +6,9 @@ import net.minecraft.server.v1_8_R3.AxisAlignedBB;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftEntity;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.util.Vector;
 
@@ -15,10 +17,24 @@ import java.util.List;
 import static java.lang.Double.NaN;
 
 
-/**
- * todo unfinished.
+/*
+ *
  * @author CAMM
  * Models a class for calculating velocity to apply to entities
+ *
+ *
+ * todo:
+ *
+ * tnt is fine, but double tnt jumping is not.
+ * tnt timing: good. 49 tick
+ *
+ *
+ * double jumping:
+ * 2nd tnt needs launch you higher, very slightly. suggest getting others to test better since kiwi not familiar.
+ *
+ *
+ *
+ *
  */
 public class VelocityComponent {
     private final EntityExplodeEvent event;
@@ -50,10 +66,47 @@ public class VelocityComponent {
     }//method
 
 
+    public Vector convertToFireballDist(Location entityLoc, Entity target, Location explosionLoc){
+
+        AxisAlignedBB box = ((CraftEntity)target).getHandle().getBoundingBox();
+        double yHalf = (box.e-box.b)/2 + box.b;
+        Location centreMass =
+                new Location(entityLoc.getWorld(), (box.d-box.a)/2 + box.a, (box.e-yHalf)/2 + yHalf,(box.f-box.c)/2 + box.c);
+
+
+        double delX, delY, delZ;
+        delX = centreMass.getX() - explosionLoc.getX();
+        delY = centreMass.getY() - explosionLoc.getY();
+        delZ = centreMass.getZ() - explosionLoc.getZ();
+
+
+        return new Vector(delX, delY, delZ);
+
+    }
+
+    public Vector convertToTNTDist(Location entityLoc, Location explosionLoc, Entity target){
+
+       // explosionLoc.add(0,0.5,0);   //account for the location by adding 0.5
+      //  net.minecraft.server.v1_8_R3.Entity nms = ((CraftEntity)target).getHandle();
+     //   float head = nms.getHeadHeight();
+        explosionLoc.add(0,-0.75,0);
+
+        return new Vector(entityLoc.getX() - explosionLoc.getX(),
+                entityLoc.getY() - explosionLoc.getY(),
+                entityLoc.getZ() - explosionLoc.getZ());
+
+
+
+
+    }
+
     /*
-    Construct the velocity and imparts it
+    Construct the velocity and imparts it on to the entity
+    @author CAMM
+
      */
     private void constructAndImpart(Location explosionLoc, Location entityLoc, Entity target){
+
 
 
           /*
@@ -87,26 +140,44 @@ public class VelocityComponent {
 
          */
 
-        AxisAlignedBB box = ((CraftEntity)target).getHandle().getBoundingBox();
-        double yHalf = (box.e-box.b)/2 + box.b;
-        Location centreMass =
-        new Location(entityLoc.getWorld(), (box.d-box.a)/2 + box.a, (box.e-yHalf)/2 + yHalf,(box.f-box.c)/2 + box.c);
 
+        double delX,delY,delZ;
+        Vector conversion;
 
-        double delX, delY, delZ;
-        delX = centreMass.getX() - explosionLoc.getX();
-        delY = centreMass.getY() - explosionLoc.getY();
-        delZ = centreMass.getZ() - explosionLoc.getZ();
+        if (isFireball) {
+            conversion = convertToFireballDist(entityLoc, target, explosionLoc);
+        }
+        else {
+          conversion = convertToTNTDist(entityLoc, explosionLoc, target);
+        }
 
-
+        delX = conversion.getX();
+        delY = conversion.getY();
+        delZ = conversion.getZ();
 
         double totalDist = Math.sqrt(delX*delX + delY*delY + delZ*delZ); //hypotenuse for vert angle
         double horDistance = Math.sqrt(delX*delX +delZ*delZ);
 
-        double totalMagnitude = isFireball ? getFireballVectorMagnitude(totalDist) : getTNTVectorMagnitude(totalDist);
+
+        double totalMagnitude;
+
+        System.out.println("target class:"+target.getClass().getSimpleName()+" E type: "+target.getType());
+
+
+
+        if (target.getType().toString().toLowerCase().contains("tnt")) {
+            totalMagnitude = getTNTProjectileMagnitude(totalDist);
+            System.out.println("tnt is projectile");
+        }
+        else {
+            totalMagnitude = isFireball? getFireballVectorMagnitude(totalDist) : getTNTVectorMagnitude(totalDist);
+
+        }
 
         System.out.println("dist:"+totalDist+"  used fbc: "+isFireball);
         System.out.println("total mag:"+totalMagnitude);
+        System.out.println("exp loc: "+explosionLoc);
+        System.out.println("targ loc: "+entityLoc);
 
         if (totalMagnitude == 0)
             return;
@@ -169,10 +240,10 @@ public class VelocityComponent {
             straightUp = true;
         } else if (delX == 0 || delZ == 0) {
 
-            //if 1 is 0, we account for an edge case.
+            //if 1 angle is 0, we account for an edge case.
             horAngle = 0;
 
-            //if x (+), then we have 0 deg, else 180.
+            //if x is positive, then we have 0 deg, else 180.
             /*
            +z (90)
              |
@@ -192,8 +263,8 @@ public class VelocityComponent {
         else {
             //the angle is the tan of delZ and delX, with Z as the "y axis" and x as the "x axis".
             horAngle = Math.atan(delZ/delX);
-            //this gives a value close to 0 from the (-) side if the position of the player
-            // is on the -x side, so we must add 180* to normalize it if so.
+            //this gives a value close to 0 from the negative side if the position of the player
+            // is on the -x side, so we must add 180* to rotate it to the correct direction it if so.
 
             if (delX<0)
                 horAngle += Math.PI;  //180* in rad form
@@ -236,10 +307,14 @@ public class VelocityComponent {
 
   distance is the distance from the explosion
   MAX is the max velocity to impart on the entity
+
+
+
      */
     private double getTNTVectorMagnitude(double distance){
+        distance -= 0.75;
         final double MAX = 1.86;
-        if (distance < 0.5)
+        if (distance < 0.75)
             return MAX;
         else {
 
@@ -263,6 +338,28 @@ public class VelocityComponent {
 
             return Math.max(magnitude, 0);
         }
+    }
+
+
+
+
+
+
+    //need to check
+    private double getTNTProjectileMagnitude(double distance) {
+        final double max = 0.8;
+        if (distance <1)
+            return max;
+
+        double mag  = -0.0158333*(Math.pow(distance, 4)) +
+                0.178333*(Math.pow(distance, 3)) -
+                0.699167 * (distance * distance) +
+                0.936667 * distance +
+                0.4;
+
+        return Math.max(Math.min(mag, max), 0);
+
+                //-0.0158333x^{4}+0.178333x^{3}-0.699167x^{2}+0.936667x+0.4
     }
 
     private double getFireballVectorMagnitude(double distance) {
@@ -309,6 +406,13 @@ public class VelocityComponent {
         Vector sum = calculated.add(entityVel);
         targeted.setVelocity(sum.normalize().multiply(MAX));
     }
+
+
+
+    /*
+    if tnt use eqn -0.0158333x^{4}+0.178333x^{3}-0.699167x^{2}+0.936667x+0.4
+    and if x < 1 use 0.8
+     */
 
 }
 
