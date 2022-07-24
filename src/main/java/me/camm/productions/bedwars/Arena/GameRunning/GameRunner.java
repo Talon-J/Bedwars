@@ -37,12 +37,12 @@ import static me.camm.productions.bedwars.Arena.Players.Scoreboards.ScoreBoardHe
 import static me.camm.productions.bedwars.Arena.GameRunning.Events.EventTime.*;
 
 
-/**
+/*
  * @author CAMM
  * This class is used to run the game. It takes care of the generators, and the player scoreboard updating as
  * well as registering other event handlers.
  */
-public class GameRunner// implements Listener
+public class GameRunner
 {
     private final Plugin plugin;
     private final Arena arena;
@@ -165,6 +165,13 @@ public class GameRunner// implements Listener
 
         int maxPlayers = 0;
 
+        Collection<BattleTeam> teams = arena.getTeams().values();
+
+
+        //we use the loader to detect if the players are in areas like trap areas, heal pools, etc
+        boundaryLoader = new ExecutableBoundaryLoader(arena);
+        boundaryLoader.start();
+
         //init the npcs for buying, etc
         for (BattleTeam team: arena.getTeams().values()) {
             maxPlayers = Math.max(maxPlayers, team.getPlayers().size());
@@ -172,32 +179,7 @@ public class GameRunner// implements Listener
             team.showNPCs();
             keepers.add(team.getTeamQuickBuy());
             keepers.add(team.getTeamGroupBuy());
-        }
 
-        //adding the packet handler for the invisibility, etc
-        this.packetHandler = new PacketHandler(keepers, arena);
-        playerLogListener.initPacketHandler(packetHandler);
-
-
-        // bedwars has different prices depending on game mode. We just use the player number on the teams to determine that.
-        if (maxPlayers>2)
-            isInflated = true;
-
-        //spawning the generators.
-        for (Generator generator: generators) {
-            generator.spawnIntoWorld();
-            generator.setPlayerNumber(maxPlayers);
-        }
-
-
-        //we use the loader to detect if the players are in areas like trap areas, heal pools, etc
-        boundaryLoader = new ExecutableBoundaryLoader(arena);
-        boundaryLoader.start();
-
-        Collection<BattleTeam> teams = arena.getTeams().values();
-
-        for (BattleTeam team: teams)  //looping through the teams
-        {
             team.initTrackingEntries(teams);
             team.startForge();
             team.setLoader(boundaryLoader);
@@ -206,6 +188,23 @@ public class GameRunner// implements Listener
             if (team.getRemainingPlayers()==0) {
                 team.eliminate();
             }
+        }
+
+
+        // bedwars has different prices depending on game mode. We just use the player number on the teams to determine that.
+        if (maxPlayers>2)
+            isInflated = true;
+
+        //adding the packet handler for the invisibility, etc
+        this.packetHandler = new PacketHandler(keepers, arena);
+        playerLogListener.initPacketHandler(packetHandler);
+
+
+
+        //spawning the generators.
+        for (Generator generator: generators) {
+            generator.spawnIntoWorld();
+            generator.setPlayerNumber(maxPlayers);
         }
 
         //updating the team statuses for the players after we decide which ones are eliminated, etc
@@ -247,6 +246,27 @@ public class GameRunner// implements Listener
 
 
     }
+
+
+    public void unregisterPlayer(Player p) {
+
+        if (arena!=null){
+            arena.getTeams().values().forEach((team) -> team.removePlayer(p));
+
+
+            BattlePlayer unregistered = arena.getPlayers().getOrDefault(p.getUniqueId(),null);
+            if (unregistered != null) {
+                arena.unregisterPlayer(p.getUniqueId());
+            }
+        }
+
+        PacketHandler handler = getPacketHandler();
+        if (handler != null) {
+            handler.removePlayer(p);
+        }
+    }
+
+
 
 
     /*
@@ -441,7 +461,7 @@ as a string.
         if (!isRunning)
             return;
 
-                BattleTeam candidate = TeamHelper.isVictorFound(arena.getTeams().values());
+        BattleTeam candidate = TeamHelper.isVictorFound(arena.getTeams().values());
                 if (candidate!=null)
                     this.endGame(candidate);
         TeamHelper.updateTeamBoardStatus(registered);
@@ -488,10 +508,12 @@ as a string.
         //Revealing all possible hidden players to other players.
         for (BattlePlayer player: arena.getPlayers().values())
         {
+
             player.teleport(arena.getSpecSpawn());
            Player raw = player.getRawPlayer();
             raw.setAllowFlight(true);
            raw.setFlying(true);
+           packetHandler.removePlayer(raw);
            player.removeInvisibilityEffect();
 
 

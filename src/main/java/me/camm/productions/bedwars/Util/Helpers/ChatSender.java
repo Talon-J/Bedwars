@@ -12,20 +12,19 @@ import java.util.logging.Logger;
 
 public class ChatSender
 {
-    private Plugin plugin;
-    private Server server;
-    private Logger logger;
+    private final Server server;
+    private final Logger logger;
     private static ChatSender sender;
     private ChatSender(Plugin plugin) {
-        this.plugin = plugin;
         server = plugin.getServer();
        logger = server.getLogger();
         sender = this;
     }
 
     public void sendConsoleMessage(String message, Level l){
-        logger.log(l,"[BEDWARS]"+message);
+        logger.log(l,"[BEDWARS] "+message);
     }
+
 
     public static ChatSender getInstance(){
         if (sender == null) {

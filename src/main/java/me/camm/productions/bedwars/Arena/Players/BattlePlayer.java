@@ -105,7 +105,8 @@ public class BattlePlayer
 
 
     //The possible persistent items a player can have.
-    private ShopItem shears;
+    private boolean hasShears;
+
     private TieredItem pick;
     private TieredItem axe;
     private TieredItem armor;
@@ -145,7 +146,7 @@ public class BattlePlayer
 
         pick = null;
         axe = null;
-        shears = null;
+        hasShears = false;
         armor = TieredItem.LEATHER_ARMOR;
 
         this.toResend = new HashMap<>();
@@ -607,8 +608,8 @@ public class BattlePlayer
 
         player.getInventory().clear();
 
-        if (getShears() != null)
-        barManager.set(ItemHelper.toSoldItem(getShears(),this),getShears(),player);
+        if (hasShears)
+            barManager.set(ItemHelper.toSoldItem(ShopItem.SHEARS,this),ShopItem.SHEARS,player);
 
         TieredItem degraded;
 
@@ -917,7 +918,7 @@ public class BattlePlayer
 
     public synchronized void setShears()
     {
-        shears = ShopItem.SHEARS;
+        hasShears = true;
     }
 
     public synchronized void setKills(int newKills)
@@ -1059,8 +1060,8 @@ public class BattlePlayer
         return armor;
     }
 
-    public synchronized ShopItem getShears() {
-        return shears;
+    public synchronized boolean hasShears() {
+        return hasShears;
     }
 
     public synchronized TieredItem getPick() {

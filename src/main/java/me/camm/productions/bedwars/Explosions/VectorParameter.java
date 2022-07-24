@@ -10,9 +10,12 @@ public enum VectorParameter
 {
 
     DROP_CHANCE(80),
+    MAX_MAGNITUDE(2),
     BLOCK_ADDITION(0.3),
 
     CEILING(101),// the ceiling value for a random number from n to 100
+    FIREBALL_RANGE(6),
+    TNT_RANGE(8),
 
     BLOCK_DIVISOR(3);
 

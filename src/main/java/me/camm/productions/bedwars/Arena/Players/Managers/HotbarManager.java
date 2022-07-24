@@ -5,7 +5,6 @@ import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurati
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -218,40 +217,45 @@ public class HotbarManager
 
 
 
-        //armor is not set in this method.
+        //armor is not set in this method. In fact, armor should not be set here at all.
         if (ItemHelper.isItemInvalid(item)||ItemHelper.isPlaceHolder(category)||
                 category==ARMOR||!player.isOnline())
             return;
 
-        //maybe do a refunding action here?
+        // checks should be made prior to calling this method, since we are selling something to them.
         if (playerInv.firstEmpty()==-1) {
-            player.sendMessage(ChatColor.RED + "Your inventory is full!");
-            return;
+            throw new IllegalStateException("Player inventory is full!");
         }
 
+        //check if the item sold is an item with tiers.
         TieredItem enumTiered = ItemHelper.isTieredItem(enumItem);
-        // normal item
+
+
         if (enumTiered != null) {
+
+            //if the tier is the lowest tier, then we can do a set as if it was a non-tiered item, since we
+            //won't be replacing any items in the player inventory.
             if (enumTiered.getIndex() == ItemHelper.getLowestTier(enumTiered).getIndex()) {
                 doNormalSet(playerInv, enumItem, item,player,event);
                 return;
             }
 
 
-
-            //If the item does not replace other things
-
             //First we try to find items that it is trying to replace.
             ItemStack[] items = playerInv.getContents();
             for (int slot = 0; slot < items.length; slot++) {
                 ItemStack residing = items[slot];
+
+                //if the item is invalid, continue
                 if (ItemHelper.isItemInvalid(residing))
                     continue;
 
+                // if we cannot resolve the associate
                 ShopItem associate = ItemHelper.getAssociate(residing);
                 if (associate == null)
                     continue;
 
+                //the item must be a tiered item to be replaced
                 TieredItem associateTier = ItemHelper.isTieredItem(associate);
                 if (associateTier == null)
                     continue;
@@ -262,13 +266,13 @@ public class HotbarManager
                 //It replaces everything
                 if (enumTiered.isTotalReplacing()) {
                     if (associateTier.getIndex() < enumTiered.getIndex()) {
-                        playerInv.setItem(slot, item);
+                        tieredSetTryWithEvent(event, playerInv, slot, item);
                         return;
                     }
                 } else {
                     //If it is the smallest index
                     if (associateTier.getIndex() == ItemHelper.getLowestTier(associateTier).getIndex()) {
-                        playerInv.setItem(slot, item);
+                        tieredSetTryWithEvent(event, playerInv, slot, item);
                         return;
                     }
 
@@ -279,23 +283,46 @@ public class HotbarManager
 
         }
         doNormalSet(playerInv,enumItem, item, player,event);
-
     }
+
+    private void tieredSetTryWithEvent(@Nullable InventoryClickEvent event, Inventory inv, int slot, ItemStack item){
+
+        if (event == null) {
+            inv.setItem(slot, item);
+            return;
+        }
+
+        int button = event.getHotbarButton();
+        if (button == -1) {
+            inv.setItem(slot, item);
+            return;
+        }
+
+        inv.setItem(slot, null);
+
+        ItemStack residing = inv.getItem(button);
+
+        if (residing != null)
+            inv.addItem(residing);
+
+        inv.setItem(button, item);
+    }
+
+
 
     public void set(ItemStack item, ShopItem enumItem, Player player)
     {
        set(item, enumItem,player, null);
     }
 
-
-
     private void doNormalSet(Inventory playerInv, ShopItem enumItem, ItemStack item, Player player,@Nullable InventoryClickEvent event) {
 
         if (event != null) {
-           boolean result = setWithEvent(playerInv,item,event);
 
-           if (result)
-               return;
+            boolean result = setWithEvent(playerInv,item,event);
+
+            if (result)
+                return;
         }
 
 
@@ -417,7 +444,7 @@ public class HotbarManager
 
         int button = event.getHotbarButton();
         if (button < 0 || button > 8)
-            throw new IllegalStateException("Button should be 0 or more and less than or equal to 8");
+            return false;
 
         if (playerInv.firstEmpty() == -1) {
             return false;
@@ -425,20 +452,23 @@ public class HotbarManager
 
 
         ItemStack residing = playerInv.getItem(button);
+        if (ItemHelper.isItemInvalid(residing)) {
+            playerInv.setItem(button, newStack);
+            return true;
+        }
+
 
             int stackSize = residing.getMaxStackSize() + newStack.getMaxStackSize();
             if (newStack.isSimilar(residing) && stackSize <= residing.getMaxStackSize()) {
                 residing.setAmount(stackSize);
-                return true;
+               return true;
             }
 
             residing = residing.clone();
             playerInv.setItem(button, newStack);
             playerInv.addItem(residing);
 
-        return true;
 
-
-
+            return true;
     }
 }

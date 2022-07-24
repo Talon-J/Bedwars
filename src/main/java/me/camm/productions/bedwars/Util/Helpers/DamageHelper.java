@@ -16,7 +16,6 @@ public class DamageHelper {
     public static void sendDeathMessage(BattlePlayer killer, BattlePlayer victim, IGameTeamable involved, EntityDamageEvent.DamageCause cause, boolean finalKill){
 
         //sendDeathMessage(owner, player, null, EntityDamageEvent.DamageCause.BLOCK_EXPLOSION,arena,isFinal);
-
         String message;
         if (killer == null) {
 

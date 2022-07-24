@@ -5,9 +5,9 @@ import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Entities.ActiveEntities.GameDragon;
 import me.camm.productions.bedwars.Entities.ActiveEntities.Hierarchy.IGameTeamable;
 import me.camm.productions.bedwars.Explosions.ExplosionParticle;
+import me.camm.productions.bedwars.Explosions.VectorParameter;
 import me.camm.productions.bedwars.Explosions.Vectors.ExplosionVector;
 import me.camm.productions.bedwars.Explosions.VectorToolBox;
-import me.camm.productions.bedwars.Explosions.Vectors.TracerVector;
 import me.camm.productions.bedwars.Explosions.VelocityComponent;
 import net.minecraft.server.v1_8_R3.DamageSource;
 import net.minecraft.server.v1_8_R3.Explosion;
@@ -29,31 +29,22 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 
-/*
-
-
-TODO
-add a reference to the entityListener here so you can relate to the enderdragons. (Since their damage() method is screwed up)
- */
 public class ExplosionHandler implements Listener
 {
     private final Plugin plugin;
     private final int[] colors;
     private final Arena arena;
-    private final static int BLOCK_BREAK_RANGE;
+
     private final EntityActionListener actionListener;
 
     private final static Random rand;
 
     static {
         rand = new Random();
-        BLOCK_BREAK_RANGE = 12;
+
     }
 
 
@@ -90,7 +81,7 @@ public class ExplosionHandler implements Listener
         }
 
         if (!doCalculation)
-        return;
+          return;
 
         sendVectors(incendiary,entity,exploded);
 
@@ -109,82 +100,75 @@ public class ExplosionHandler implements Listener
         ArrayList<Block> fireCandidates = new ArrayList<>();
 
         Location explosionCenter = exploded.getLocation();
-        double damageDistance = incendiary ? 6:8;
 
-
-        Collection<Entity> entities = explosionCenter.getWorld().getNearbyEntities(explosionCenter,damageDistance,damageDistance,damageDistance);
+        Collection<Entity> entities = explosionCenter.getWorld().getEntities();
 
         //now we calculate the damage for the entities first since we need to account for the blocks that might be
         //in the way protecting them.
 
 
         Vector origin = explosionCenter.toVector();
-                entities.forEach(entity -> {
 
-                    IS_LIVING:
-                    {
+        double damageDist = incendiary ? VectorParameter.FIREBALL_RANGE.getValue() : VectorParameter.TNT_RANGE.getValue();
 
-                        if (!(entity instanceof LivingEntity) || (!VectorToolBox.isValidDamageType(entity)))
-                            break IS_LIVING;
+        for (Entity entity : entities) {
 
-                        Vector location = entity.getLocation().toVector();
-                        Vector direction = location.clone().subtract(origin.clone());
-                        double length = direction.length();
-
-                        TracerVector tracer = new TracerVector(direction.clone().normalize(), origin.clone(), length, world);
-                        ArrayList<Material> obstructions = tracer.getObstructionLayers();
-
-                            double damage = -0.25*((0.5*length)) +1;
-
-                    //    damage *= -0.1 * (0.5*length + 0.3*obstructions.size()) + 1;  // this is a function
+            if (!(entity instanceof LivingEntity))
+                continue;
 
 
-                        if (damage < 0)
-                            damage = 0;
+            if (!VectorToolBox.isValidDamageType(entity)) {
+                continue;
+            }
+
+            Vector location = entity.getLocation().toVector();
+            Vector direction = location.clone().subtract(origin.clone());
+            double length = direction.lengthSquared();
 
 
-                        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(exploded, entity, EntityDamageEvent.DamageCause.ENTITY_EXPLOSION, damage);
-                        Bukkit.getPluginManager().callEvent(event);
+            if (entity.getLocation().distanceSquared(explosionCenter) > (damageDist * damageDist)) {
+                continue;
+            }
 
-                        if (!event.isCancelled())
-                        {
-                            UUID id = entity.getUniqueId();
-                            if (actionListener.contains(id))
-                            {
+            double damage = -0.25 * ((0.5 * length)) + 1;
+            if (damage < 0)
+                damage = 0;
 
-                                //accounting for enderdragons.
-                              IGameTeamable teamEntity = actionListener.getEntity(id);
-                              if (teamEntity instanceof GameDragon)
-                              {
-                                  //Explosion(World world, Entity entity, double d0, double d1, double d2, float f, boolean flag, boolean flag1)
-                                  Explosion explosion = new Explosion(((CraftWorld)world).getHandle(),((CraftEntity)exploded).getHandle(),location.getX(), location.getY(), location.getZ(),0,false, false);
-                                  ((GameDragon)teamEntity).dealRawDamage(DamageSource.explosion(explosion),(float)event.getFinalDamage());
-                              }
-                              else
-                              {
-                                  ((LivingEntity)entity).damage(event.getFinalDamage(), exploded);
-                                  entity.setLastDamageCause(event);
-                              }
-                              return;
-                            }
 
-                            if (arena.getPlayers().containsKey(entity.getUniqueId())) {
-                                ((LivingEntity)entity).damage(event.getFinalDamage(), exploded);
-                            }
-                        }
 
-                        if (!VectorToolBox.isValidVelocityType(entity))
-                            break IS_LIVING;
 
-                        //unfinished. velocity needs reworking.
-                        VelocityComponent component = new VelocityComponent(explodeEvent);
-                        component.applyVelocity();
-           }
-        });
+            EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(exploded, entity, EntityDamageEvent.DamageCause.ENTITY_EXPLOSION, damage);
+            Bukkit.getPluginManager().callEvent(event);
+
+            if (!event.isCancelled()) {
+                UUID id = entity.getUniqueId();
+                if (actionListener.contains(id)) {
+
+                    //accounting for enderdragons.
+                    IGameTeamable teamEntity = actionListener.getEntity(id);
+                    if (teamEntity instanceof GameDragon) {
+                        Explosion explosion = new Explosion(((CraftWorld) world).getHandle(), ((CraftEntity) exploded).getHandle(), location.getX(), location.getY(), location.getZ(), 0, false, false);
+                        ((GameDragon) teamEntity).dealRawDamage(DamageSource.explosion(explosion), (float) event.getFinalDamage());
+                    } else {
+                        ((LivingEntity) entity).damage(event.getFinalDamage(), exploded);
+                    }
+                    entity.setLastDamageCause(event);
+                    return;
+                }
+
+                if (arena.getPlayers().containsKey(entity.getUniqueId())) {
+                    ((LivingEntity) entity).damage(event.getFinalDamage(), exploded);
+                }
+            }
+
+        }
+
+        VelocityComponent component = new VelocityComponent(explodeEvent);
+        component.applyVelocity();
 
         double distance = 0;
 
-        while  (distance<BLOCK_BREAK_RANGE)  //8 is arbitrarily the max distance tnt can break blocks.
+        while  (distance<damageDist)  //8 is arbitrarily the max distance tnt can break blocks.
         {
 
             for (int rays=directions.size()-1;rays>0;rays--)
@@ -193,7 +177,7 @@ public class ExplosionHandler implements Listener
                 boolean broken = directions.get(rays).conflict(block); //determine if the block should be broken.
 
                 if (!broken) {
-                    if (!directions.get(rays).validate())  //If the vector has lost power, then remove it to save resources.
+                    if (directions.get(rays).lostStrength())  //If the vector has lost power, then remove it to save resources.
                         directions.remove(rays);
                     continue;
                 }
@@ -203,13 +187,13 @@ public class ExplosionHandler implements Listener
                 if (incendiary)
                       fireCandidates.add(block);  //consider the block for fire [Might not be air]
 
-                if (!directions.get(rays).validate())  //If the vector has lost power, then remove it to save resources.
+                if (directions.get(rays).lostStrength())  //If the vector has lost power, then remove it to save resources.
                     directions.remove(rays);
 
             }//for
 
-            //Advance the vectors by 0.5 blocks.
-            distance += 0.3;
+            //Advance the vectors
+            distance += 0.1;
 
         } //while
 
@@ -218,7 +202,7 @@ public class ExplosionHandler implements Listener
             return;
 
 
-            for (Block fireCandidate : fireCandidates) {
+        for (Block fireCandidate : fireCandidates) {
                 //getting block below the air block in the arraylist
                 Block testBlock = fireCandidate.getLocation().subtract(0, 1, 0).getBlock();
                 Material currentMaterial = testBlock.getType();
@@ -249,35 +233,49 @@ public class ExplosionHandler implements Listener
 
     }
 
+    //we should probably change this to be better. (I.e use final variables, make it more exact, such as a 90.5% chance instead of 90%)
     private void rollFireChance(Block block)
     {
-        int setFire = rand.nextInt(11);
-        if (setFire >= 9)
+        int setFire = rand.nextInt(101);
+        if (setFire >= 90)
             block.setType(Material.FIRE);
     }
 
     private ArrayList<ExplosionVector> getBlockBreakingVectors(World world, boolean incendiary, Entity exploded)
     {
         ArrayList<ExplosionVector> directions = new ArrayList<>();
-        double xLocation = exploded.getLocation().getX();
-        double yLocation = exploded.getLocation().getY();
-        double zLocation = exploded.getLocation().getZ();
+        Location loc = exploded.getLocation();
+        double xLocation = loc.getX();
+        double yLocation = loc.getY();
+        double zLocation = loc.getZ();
 
         //Creating the vectors based on angles.
+        //minecraft angles for the vertical pitch go from -90 to 90, where -90 is directly up and 90 is directly down.
+        //minecraft angles are in radians though, but that's fine since math.sin and cos take care of that.
+
+        //unless you wanna go through the trouble of decompiling, translating, and registering a subclass of entity tnt,
+        // we're doing this instead.
         for (double vertical=90;vertical>=-90;vertical-=5.625)
         {
-            double yComponent = Math.tan(vertical); //y value
+            double yComponent = Math.tan(Math.toRadians(vertical)); //y value
+
+            //vectors going out in 360 degrees by intervals of 5.625 degrees
+            //5.625 degrees is an arbitrary amount such that most, if not all blocks in a radius are hit by vectors similar
+            //to regular tnt
             for (double horizontal=0;horizontal<=360;horizontal+=5.625)
             {
-                double xComponent = Math.sin(horizontal);  //x Value of the vector
-                double zComponent = Math.cos(horizontal);  //z Value of the vector
+                double horRads = Math.toRadians(horizontal);
+                double xComponent = Math.sin(horRads);  //x Value of the vector
+                double zComponent = Math.cos(horRads);  //z Value of the vector
 
                 directions.add(new ExplosionVector(new Vector(xComponent,yComponent,zComponent),
                         new Vector(xLocation,yLocation,zLocation),world,incendiary,colors));
             }
         }
 
-        //Adding vectors separately so that there aren't 16 instances of the same one.
+        //Adding vectors separately so that there aren't many instances of the same one.
+        //this is for the vectors going directly up and down cause going 360 degrees in the x and z axis when they are
+        // both 0 make a bunch of traces
         directions.add(new ExplosionVector(new Vector(0,1,0),
                 new Vector(xLocation,yLocation,zLocation),world,incendiary,colors));
 
