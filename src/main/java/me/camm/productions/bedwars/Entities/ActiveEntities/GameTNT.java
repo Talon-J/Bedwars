@@ -14,9 +14,10 @@ import org.bukkit.util.Vector;
 import java.util.Random;
 import java.util.UUID;
 
-/**
+/*
  * @author CAMM
- * Models a piece of tnt that is exploding.
+ * Models a piece of tnt that is exploding in the game.
+ * Note for the future:
  */
 public class GameTNT implements IGameOwnable
 {

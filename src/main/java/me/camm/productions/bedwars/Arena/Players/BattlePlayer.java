@@ -609,7 +609,7 @@ public class BattlePlayer
         player.getInventory().clear();
 
         if (hasShears)
-        barManager.set(ItemHelper.toSoldItem(ShopItem.SHEARS,this),ShopItem.SHEARS,player);
+            barManager.set(ItemHelper.toSoldItem(ShopItem.SHEARS,this),ShopItem.SHEARS,player);
 
         TieredItem degraded;
 

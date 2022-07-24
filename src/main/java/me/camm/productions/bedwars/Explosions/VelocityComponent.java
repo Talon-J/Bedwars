@@ -6,9 +6,7 @@ import net.minecraft.server.v1_8_R3.AxisAlignedBB;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftEntity;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
-import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.util.Vector;
 
@@ -52,7 +50,7 @@ public class VelocityComponent {
     {
 
         Entity exploded = this.event.getEntity();
-        Location origin = exploded.getLocation();
+        Location origin = exploded.getLocation().clone();
 
         List<Entity> nearEntities = exploded.getNearbyEntities(exploded.getLocation().getX(), exploded.getLocation().getY(), exploded.getLocation().getZ());
 
@@ -60,7 +58,7 @@ public class VelocityComponent {
         {
             if (!VectorToolBox.isValidVelocityType(e))   //So if the entity can be affected by velocity
                continue;
-            constructAndImpart(origin, e.getLocation(),e);
+            constructAndImpart(origin, e.getLocation().clone(),e);
 
         }//for nearby
     }//method
@@ -84,12 +82,10 @@ public class VelocityComponent {
 
     }
 
-    public Vector convertToTNTDist(Location entityLoc, Location explosionLoc, Entity target){
+    public Vector convertToTNTDist(Location entityLoc, Location explosionLoc){
 
-       // explosionLoc.add(0,0.5,0);   //account for the location by adding 0.5
-      //  net.minecraft.server.v1_8_R3.Entity nms = ((CraftEntity)target).getHandle();
-     //   float head = nms.getHeadHeight();
-        explosionLoc.add(0,-0.75,0);
+            entityLoc.add(0,0.5,0);
+
 
         return new Vector(entityLoc.getX() - explosionLoc.getX(),
                 entityLoc.getY() - explosionLoc.getY(),
@@ -97,6 +93,15 @@ public class VelocityComponent {
 
 
 
+
+    }
+
+    public Vector convertToTNTProjectileDist(Location entityLoc, Location explosionLoc) {
+
+        entityLoc.add(0.5,0.5,0.5);
+        explosionLoc.add(0.5,0.5,0.5);
+
+        return new Vector(entityLoc.getX() - explosionLoc.getX(), entityLoc.getY() - explosionLoc.getY(), entityLoc.getZ() - explosionLoc.getZ());
 
     }
 
@@ -144,12 +149,17 @@ public class VelocityComponent {
         double delX,delY,delZ;
         Vector conversion;
 
+
+        String type = target.getType().toString().toLowerCase();
+
         if (isFireball) {
             conversion = convertToFireballDist(entityLoc, target, explosionLoc);
         }
-        else {
-          conversion = convertToTNTDist(entityLoc, explosionLoc, target);
+        else if (type.contains("tnt")){
+          conversion = convertToTNTProjectileDist(entityLoc, explosionLoc);
         }
+        else
+            conversion = convertToTNTDist(entityLoc, explosionLoc);
 
         delX = conversion.getX();
         delY = conversion.getY();
@@ -161,11 +171,10 @@ public class VelocityComponent {
 
         double totalMagnitude;
 
-        System.out.println("target class:"+target.getClass().getSimpleName()+" E type: "+target.getType());
 
 
 
-        if (target.getType().toString().toLowerCase().contains("tnt")) {
+        if (type.contains("tnt")) {
             totalMagnitude = getTNTProjectileMagnitude(totalDist);
             System.out.println("tnt is projectile");
         }
@@ -312,9 +321,11 @@ public class VelocityComponent {
 
      */
     private double getTNTVectorMagnitude(double distance){
-        distance -= 0.75;
+
+        double offset = 1;
+        distance -= offset;
         final double MAX = 1.86;
-        if (distance < 0.75)
+        if (distance <= offset)
             return MAX;
         else {
 

@@ -42,7 +42,7 @@ import static me.camm.productions.bedwars.Arena.GameRunning.Events.EventTime.*;
  * This class is used to run the game. It takes care of the generators, and the player scoreboard updating as
  * well as registering other event handlers.
  */
-public class GameRunner// implements Listener
+public class GameRunner
 {
     private final Plugin plugin;
     private final Arena arena;
@@ -461,7 +461,7 @@ as a string.
         if (!isRunning)
             return;
 
-                BattleTeam candidate = TeamHelper.isVictorFound(arena.getTeams().values());
+        BattleTeam candidate = TeamHelper.isVictorFound(arena.getTeams().values());
                 if (candidate!=null)
                     this.endGame(candidate);
         TeamHelper.updateTeamBoardStatus(registered);

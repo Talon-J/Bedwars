@@ -187,6 +187,8 @@ public class CommandProcessor {
 
         sender.sendMessage(ChatColor.GOLD+sender.getName()+" has ended the game with a manual override.");
         runner.endGame(null);
+
+
     }
 
 
