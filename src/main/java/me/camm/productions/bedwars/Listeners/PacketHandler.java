@@ -12,6 +12,7 @@ import net.minecraft.server.v1_8_R3.PacketPlayOutRemoveEntityEffect;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
@@ -146,7 +147,7 @@ public class PacketHandler extends ItemHelper
 
                             if (clicked.getIsTeamKeeper()) {
                               //  player.sendMessage("[DEBUG]Open team upgrades");
-                                player.openInventory(openingPlayer.getTeam().getTeamInventory());
+                                player.openInventory((Inventory)openingPlayer.getTeam().getTeamInventory());
                             } else {
                               //  player.sendMessage("[DEBUG]open quick buy");
                                 player.openInventory(openingPlayer.getShopManager().getQuickBuy());

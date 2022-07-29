@@ -1,4 +1,4 @@
-package me.camm.productions.bedwars.Items.ItemDatabases;
+package me.camm.productions.bedwars.Items.SectionInventories.Templates;
 
 
 /**

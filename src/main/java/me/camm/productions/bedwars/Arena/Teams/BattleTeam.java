@@ -2,6 +2,7 @@ package me.camm.productions.bedwars.Arena.Teams;
 
 import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
+import me.camm.productions.bedwars.Arena.Players.Managers.PlayerTrackerManager;
 import me.camm.productions.bedwars.Arena.Teams.TeamTraps.ITrap;
 import me.camm.productions.bedwars.Entities.ShopKeeper;
 import me.camm.productions.bedwars.Generators.Forge;
@@ -10,13 +11,16 @@ import me.camm.productions.bedwars.Items.ItemDatabases.TeamItem;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamBuyInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TrackerSectionInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamInventoryConfig;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Util.Locations.Boundaries.ExecutableBoundaryLoader;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import me.camm.productions.bedwars.Util.Locations.Coordinate;
 import me.camm.productions.bedwars.Util.Locations.Boundaries.GameBoundary;
 import me.camm.productions.bedwars.Util.Locations.RegisterType;
+import me.camm.productions.bedwars.Util.Locations.IRegistratable;
 import me.camm.productions.bedwars.Util.PacketSound;
+import me.camm.productions.bedwars.Util.Tuple3;
 import net.minecraft.server.v1_8_R3.Packet;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -35,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static me.camm.productions.bedwars.Arena.Teams.TeamTitle.BED_DESTROYED;
 import static me.camm.productions.bedwars.Arena.Teams.TeamTitle.LAST_LIFE_WARNING;
 import static me.camm.productions.bedwars.Util.Locations.BlockRegisterType.*;
-import static me.camm.productions.bedwars.Util.Locations.RegisterType.EVERYTHING;
+import static me.camm.productions.bedwars.Util.Locations.RegisterType.*;
 
 
 public class BattleTeam
@@ -90,6 +94,7 @@ public class BattleTeam
 
     private final String teamPrefix;
     private final static String teamPostfix;
+    private final Tuple3<String, IRegistratable,RegisterType>[] teamBounds;
 
 
 
@@ -136,8 +141,8 @@ public class BattleTeam
 
         this.teamPrefix = teamColor.getChatColor()+"["+teamColor.getSymbol()+"]";
         this.traps = new ITrap[3];
-        this.teamInventory = new TeamBuyInventory();
-        trackerInventory = new TrackerSectionInventory();
+        this.teamInventory = new TeamBuyInventory(arena);
+        trackerInventory = new TrackerSectionInventory(arena);
 
 
         this.upgrades = new ConcurrentHashMap<>();
@@ -148,6 +153,20 @@ public class BattleTeam
         }
 
         this.dragonSpawnNumber = 1;
+
+        teamBounds = new Tuple3[]{
+                new Tuple3<>(BED.getData(),this.bed,NOT_AIR),
+                new Tuple3<>(CHEST.getData(),this.chest,null),
+                new Tuple3<>(BASE.getData(),box,AIR_ONLY),
+                new Tuple3<>(AURA.getData(),this.aura,EVERYTHING),
+                new Tuple3<>(teamColor.getName(),this.aura,EVERYTHING),
+                new Tuple3<>(TRAP.getData(),this.trapArea,EVERYTHING),
+                new Tuple3<>(teamColor.getName(),this.trapArea,EVERYTHING)
+        };
+
+
+
+
     }
 
     public void setLoader(ExecutableBoundaryLoader loader){
@@ -256,6 +275,12 @@ public class BattleTeam
         teamGroupBuy.sendNPCToAll();
         teamQuickBuy.setRotationForAllPlayers();
         teamGroupBuy.setRotationForAllPlayers();
+    }
+
+    public void empty(){
+        for (BattlePlayer next : players.values()) {
+            arena.unregisterPlayer(next.getUUID());
+        }
     }
 
 
@@ -473,6 +498,15 @@ It is up to the calling method to update the scoreboards of the players.
     }
 
 
+    public TrackerSectionInventory getTrackerInventory(){
+        return trackerInventory;
+    }
+
+    public void setTrackerManager(PlayerTrackerManager manager) {
+        trackerInventory.setManager(manager);
+    }
+
+
 
 
     /*
@@ -545,15 +579,25 @@ It is up to the calling method to update the scoreboards of the players.
         World world = arena.getWorld();
         Plugin plugin = arena.getPlugin();
 
-        bed.register(world, BED.getData(), RegisterType.NOT_AIR.getType(),plugin);
-        chest.registerBlock(world,CHEST.getData(),plugin);
-        box.register(world, BASE.getData(),RegisterType.AIR_ONLY.getType(), plugin);
+        for (Tuple3<String, IRegistratable,RegisterType> tuple: teamBounds) {
+            IRegistratable bounding = tuple.getB();
+            RegisterType type = tuple.getC();
 
-        aura.register(world, AURA.getData(), EVERYTHING.getType(),plugin);
-        aura.register(world, teamColor.getName(),EVERYTHING.getType(),plugin);
+            if (type == null) {
+                bounding.register(world, tuple.getA(), plugin);
+            }
+            else
+                 bounding.register(world, tuple.getA(), type.getType(), plugin);
+        }
+    }
 
-        trapArea.register(world, TRAP.getData(), EVERYTHING.getType(),plugin);
-        trapArea.register(world, teamColor.getName(), EVERYTHING.getType(), plugin);
+    public void unregisterBase(){
+
+        World world = arena.getWorld();
+        Plugin plugin = arena.getPlugin();
+        for (Tuple3<String, IRegistratable, RegisterType> tuple: teamBounds) {
+            tuple.getB().unregister(world, tuple.getA(), plugin);
+        }
     }
 
     //sends a packet to all players on the team
@@ -697,7 +741,7 @@ It is up to the calling method to update the scoreboards of the players.
         return traps[0];
     }
 
-    public TeamBuyInventory getTeamInventory()
+    public IGameInventory getTeamInventory()
     {
         return teamInventory;
     }

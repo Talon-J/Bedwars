@@ -1,32 +1,27 @@
 package me.camm.productions.bedwars.Util.Helpers;
 
+import me.camm.productions.bedwars.BedWars;
 import me.camm.productions.bedwars.Files.FileKeywords.DataSeparatorKeys;
 import me.camm.productions.bedwars.Files.FileKeywords.FilePaths;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import java.util.logging.Logger;
+import java.util.logging.Level;
+
 
 public class StringHelper
 {
 
-    private final Plugin plugin;
-    private final String deliminator;
-
-    public StringHelper(Plugin plugin)
-    {
-        this.plugin = plugin;
-        this.deliminator = getSlashes();
-    }
+   // private final Plugin plugin;
+    private static final String deliminator= "\\";
 
     //gets the string with comments (#abc) accounted for
     //returns null if the entire string is a comment
-    public String checkForComments(String original)
+    public static String checkForComments(String original)
     {
         if (original == null)
             return null;
@@ -43,7 +38,7 @@ public class StringHelper
 
     //returns the section of a string after the ":" keyword, trimmed.
     //returns null if: ":" dne or the number of ":" > 1
-    public String getInfoSection(String original)
+    public static String getInfoSection(String original)
     {
         if (original == null)
             return null;
@@ -63,63 +58,14 @@ public class StringHelper
         return (original.substring(index+1)).trim();
     }
 
-    //for the reading of the inv and hotbar files, b/c 0 does not mean selected
-    public Double getNumber(String original)
-    {
-        original = getInfoSection(original);
-        return toNullableNumber(original);
-    }
 
-    private @Nullable Double toNullableNumber(String processed)
-    {
-        try
-        {
-            return Double.parseDouble(processed);
-        }
-        catch (NumberFormatException | NullPointerException e)
-        {
-            printParseError(processed);
-            return null;
-        }
-    }
-
-    private @Nullable Double toNullableNumber(String processed, String context){
-        try
-        {
-            return Double.parseDouble(processed);
-        }
-        catch (RuntimeException e){
-            printParseError(processed, context);
-            return null;
-        }
-    }
-
-
-    //returns the part of the string before the ":".
-    //Returns null if ":" dne or if # of ":" > 1
-    public String getKey(String commentChecked)
-    {
-        if (commentChecked==null)
-            return null;
-
-        int occurrences = 0;
-      for (int position=0;position<commentChecked.length();position++)
-      {
-          if (commentChecked.charAt(position)== DataSeparatorKeys.DECLARATION.getKeyAsChar())
-               occurrences++;
-      }
-      if (occurrences>1||occurrences==0)
-          return null;
-
-     return (commentChecked.substring(0,commentChecked.indexOf(DataSeparatorKeys.DECLARATION.getKeyAsChar()))).trim();
-    }
 
 
 
 
     //takes a string, returns a numerical array depending on the context
     //if runs into error --> returns null
-    public double[] getNumbers(String original)
+    public static @Nullable double[] getNumbers(String original)
     {
         original = getInfoSection(original);
         if (original==null) {
@@ -146,8 +92,14 @@ public class StringHelper
 
 
     //takes a double array and converts it into an int array
-    public Integer[] doubleToIntArray(double @NotNull [] values)
+    public static Integer[] doubleToIntArray(double[] values)
     {
+
+        if (values == null)
+            throw new NullPointerException("values is null!");
+
+
+
         Integer[] processed = new Integer[values.length];
         for (int slot=0;slot<values.length;slot++) {
             processed[slot] = (int) values[slot];
@@ -156,7 +108,7 @@ public class StringHelper
     }
 
     //changes a string to a double. Returns 0 if fails
-    public double toNumber(String format)
+    public static double toNumber(String format)
     {
         try
         {
@@ -170,81 +122,67 @@ public class StringHelper
     }
 
     //gets the plugin folder of the server.
-    public String getServerFolder()
+    public static String getServerFolder()
     {
-        return plugin.getDataFolder().getParentFile().getAbsolutePath();
+        return BedWars.getPlugin().getDataFolder().getParentFile().getAbsolutePath();
     }
 
-    public String getMainFolderPath()
+    public static String getMainFolderPath()
     {
         return getServerFolder()+deliminator+ FilePaths.MAIN.getValue();
     }
     //gets the path of the world txt file
-    public String getWorldPath()
+    public static String getWorldPath()
     {
        return getMainFolderPath()+deliminator+ FilePaths.WORLD.getValue();
     }
 
-    public String getTeamPath()
+    public static String getTeamPath()
     {
         return getMainFolderPath()+deliminator+ FilePaths.TEAMS.getValue();
     }
 
-    public String getCreditsPath()
+    public static String getCreditsPath()
     {
         return getMainFolderPath()+deliminator+ FilePaths.CREDITS.getValue();
     }
 
-    public String getInstructionsPath()
+    public static String getInstructionsPath()
     {
         return getMainFolderPath()+deliminator+ FilePaths.INSTRUCTIONS.getValue();
     }
 
-    public String getPlayerFolderPath()
+    public static String getPlayerFolderPath()
     {
         return getMainFolderPath()+deliminator+ FilePaths.PLAYER.getValue();
     }
 
-    public String getHotBarPath(Player player)
+    public static String getHotBarPath(Player player)
     {
         return getPlayerPath(player)+deliminator+ FilePaths.HOTBAR.getValue();
     }
 
     //gets the specified player folder
-    public String getPlayerPath(Player player)
+    public static String getPlayerPath(Player player)
     {
         String uuid = player.getUniqueId().toString();
         return getPlayerFolderPath()+deliminator+uuid;
     }
 
-    public String getInventoryPath(Player player)
+    public static String getInventoryPath(Player player)
     {
         return getPlayerPath(player)+deliminator+ FilePaths.INVENTORY.getValue();
     }
 
 
-    private String getSlashes()
-    {
-        String path = getServerFolder();
-        if (path.contains(FilePaths.FORWARD_SLASH.getValue()))
-            return FilePaths.FORWARD_SLASH.getValue();
-        else
-            return FilePaths.BACKSLASH.getValue();
-    }
 
 
-    public void printParseError(String value)
+
+    public static void printParseError(String value)
     {
-       Logger logger =  plugin.getLogger();
-       logger.warning(ChatColor.RED+"[WARNING] Attempted to parse "+value+" to a number. Defaulted to 0.");
+       ChatSender sender = ChatSender.getInstance();
+       sender.sendConsoleMessage(value, Level.WARNING);
+
     }
 
-    public void printParseError(String value, String context)
-    {
-        Logger logger =  plugin.getLogger();
-        logger.warning(ChatColor.RED+"================================");
-        logger.warning(ChatColor.RED+"[WARNING] Attempted to parse "+value+" to a number. Defaulted to 0.");
-        logger.warning(ChatColor.RED+"[WARNING] Context: "+context);
-        logger.warning(ChatColor.RED+"================================");
-    }
 }

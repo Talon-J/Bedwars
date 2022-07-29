@@ -2,12 +2,13 @@ package me.camm.productions.bedwars.Util.Locations;
 
 import me.camm.productions.bedwars.Util.Locations.Boundaries.SoakBoundary;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 
-public class Coordinate
+public class Coordinate implements IRegistratable
 {
     private double x,y,z, yaw;
 
@@ -67,6 +68,26 @@ public class Coordinate
         this.yaw = 0;
     }
 
+    @Override
+    public void register(World world, String type, int blocks, Plugin plugin) {
+
+        Block block = world.getBlockAt((int)x,(int)y,(int)z);
+        FixedMetadataValue value = new FixedMetadataValue(plugin, 1);
+
+        if (blocks == RegisterType.AIR_ONLY.getType()) {
+            if (block.getType() == Material.AIR)
+                 block.setMetadata(type, value);
+        }
+        else if (blocks==RegisterType.NOT_AIR.getType())
+        {
+            if (block.getType() != Material.AIR)
+                block.setMetadata(type, value);
+        }
+        else
+            block.setMetadata(type, value);
+
+
+    }
 
     public double getX()
     {
@@ -99,9 +120,14 @@ public class Coordinate
         return new Location(world, x, y, z,(float)yaw, 0);
     }
 
-    public void registerBlock(World world, String type, Plugin plugin)
+    @Override
+    public void register(World world, String type, Plugin plugin)
     {
         world.getBlockAt((int)x,(int)y,(int)z).setMetadata(type,new FixedMetadataValue(plugin,1));
+    }
+
+    public void unregister(World world, String type, Plugin p){
+        world.getBlockAt((int)x,(int)y,(int)z).removeMetadata(type, p);
     }
 
     public SoakBoundary toBoundaryPoint()

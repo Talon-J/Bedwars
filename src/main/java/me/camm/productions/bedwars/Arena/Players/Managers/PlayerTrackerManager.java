@@ -1,0 +1,147 @@
+package me.camm.productions.bedwars.Arena.Players.Managers;
+
+import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
+import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+
+import java.util.*;
+
+public class PlayerTrackerManager implements Runnable{
+
+
+    private final Object lock;
+    private final Thread thread;
+
+    private volatile boolean running;
+
+
+    private final Set<BattlePlayer> trackingEntries;
+
+
+    public PlayerTrackerManager() {
+
+        this.lock = new Object();
+        thread = new Thread(this);
+        this.running = false;
+        this.trackingEntries = new HashSet<>();
+    }
+
+
+    public void start(){
+        if (thread.isAlive())
+            return;
+
+        setRunning(true);
+        thread.start();
+    }
+
+    public synchronized void setRunning(boolean running) {
+        this.running = running;
+    }
+
+    @Override
+    public void run() {
+
+        try {
+            loop();
+        }
+        catch (InterruptedException ignored) {
+        }
+
+
+    }
+
+
+    public void loop() throws InterruptedException {
+
+       while (running) {
+           if (trackingEntries.isEmpty()) {
+               synchronized (lock) {
+                   lock.wait();
+               }
+
+
+               Iterator<BattlePlayer> iter = trackingEntries.iterator();
+               while (iter.hasNext()) {
+                   BattlePlayer next = iter.next();
+
+                  BattleTeam tracking = next.getTracking();
+                   if (tracking == null) {
+                       iter.remove();
+                       continue;
+
+                   }
+
+                  BattlePlayer target = getTarget(tracking, next);
+
+                   if (target == null) {
+                       next.sendTitle(null, "{\"text\":\""+ChatColor.GREEN+"Tracking: None\"}",1,60,1);
+                   }
+                   else  {
+
+                       Player rawTarget = target.getRawPlayer();
+                       Player raw = next.getRawPlayer();
+                      double distance = raw.getLocation().distance(rawTarget.getLocation());
+
+                      raw.setCompassTarget(rawTarget.getLocation());
+                      next.sendTitle(null,"{\"text\":\""+ChatColor.GREEN+
+                              "Tracking: "+target.getRawPlayer().getName()+
+                              " Distance: "+distance+"\"}",1,60,1);
+                   }
+               }
+           }
+       }
+    }
+
+
+
+    public BattlePlayer getTarget(BattleTeam tracking, BattlePlayer tracker){
+
+        Collection<BattlePlayer> players = tracking.getPlayers().values();
+
+        if (players.size() == 0)
+            return null;
+
+        BattlePlayer closest = players.iterator().next();
+        double dist = Double.MAX_VALUE;
+        Location origin = tracker.getRawPlayer().getLocation();
+        for (BattlePlayer teamPlayer: players) {
+
+
+          double current = teamPlayer.getRawPlayer().getLocation().distanceSquared(origin);
+
+          if (current <= dist) {
+              dist = current;
+              closest = teamPlayer;
+          }
+        }
+
+        return closest;
+    }
+
+
+
+
+    public void resume(){
+        synchronized (lock) {
+            lock.notify();
+        }
+    }
+
+    public void addEntry(BattlePlayer player){
+        synchronized (trackingEntries) {
+            trackingEntries.add(player);
+
+        }
+
+        resume();
+    }
+
+    public void removeEntry(BattlePlayer player){
+        synchronized (trackingEntries) {
+            trackingEntries.remove(player);
+        }
+    }
+}

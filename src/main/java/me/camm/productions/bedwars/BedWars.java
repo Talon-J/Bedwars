@@ -13,13 +13,14 @@ import me.camm.productions.bedwars.Listeners.PacketHandler;
 import me.camm.productions.bedwars.Files.FileCreators.DirectoryCreator;
 import me.camm.productions.bedwars.Files.FileStreams.GameFileWriter;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuySection;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyInventory;
 import me.camm.productions.bedwars.Util.DataSets.ShopItemSet;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Util.Helpers.StringHelper;
+import me.camm.productions.bedwars.Validation.BedWarsException;
+import me.camm.productions.bedwars.Validation.RegistrationException;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -40,6 +41,8 @@ public final class BedWars extends JavaPlugin
     private GameIntializer initialization;
     private final String DRAGON_NAME = "EnderDragon";
     private final int DRAGON_ID = 63;
+    private final Class<? extends Entity> gameDragon = GameDragon.class;
+    private final Class<? extends Entity> dragon = EntityEnderDragon.class;
 
     private static Plugin plugin;
 
@@ -47,92 +50,90 @@ public final class BedWars extends JavaPlugin
         return plugin;
     }
 
-
-
-    @Override @SuppressWarnings("unchecked")
+    @Override
     public void onEnable()
     {
 
         plugin = this;
         ChatSender sender = ChatSender.getInstance();
 
+      //  System.out.println(ShopItem.EMPTY_SLOT.category);
+
+
 
         //we init it right away so that we can use it anywhere.
 
-        sender.sendConsoleMessage(ChatColor.GREEN+"STARTING UP",Level.INFO);
-        sender.sendConsoleMessage(ChatColor.AQUA+"It is recommended that you make a backup of this world before starting the game, if you haven't done so.",Level.INFO);
-        DirectoryCreator fileCreator = new DirectoryCreator(this);
-       if (!fileCreator.createFolders())
-       {
-           sender.sendConsoleMessage("Files are not configured.", Level.WARNING);
-           sender.sendConsoleMessage("Please reload the plugin with /rl after configuration has been completed. ",Level.WARNING);
-           getServer().getPluginManager().disablePlugin(this);
-       }
-       else
-       {
+        sender.sendConsoleMessage("STARTING UP",Level.INFO);
+        sender.sendConsoleMessage("It is recommended that you make a backup of this world as the game may destroy and change it.",Level.INFO);
 
-           try {
-               Field c = EntityTypes.class.getDeclaredField("c");
-               c.setAccessible(true);
-               Map<String, Class<? extends Entity>> cMap = (Map<String, Class<? extends Entity>>) c.get(EntityTypes.class);
-               cMap.remove(DRAGON_NAME);
+       try {
+           DirectoryCreator fileCreator = new DirectoryCreator(this);
+           fileCreator.createFiles();
 
-               Field e = EntityTypes.class.getDeclaredField("e");
-               e.setAccessible(true);
-               Map<Integer, Class<? extends Entity>> eMap = (Map<Integer, Class<? extends Entity>>) e.get(EntityTypes.class);
-               eMap.remove(DRAGON_ID);
+           replaceClass(gameDragon, DRAGON_NAME, DRAGON_ID);
+           sender.sendConsoleMessage("Registering custom ender dragon...", Level.INFO);
 
-               Method aMethod = EntityTypes.class.getDeclaredMethod("a",Class.class,String.class,int.class);
-               aMethod.setAccessible(true);
-               aMethod.invoke(EntityTypes.class, GameDragon.class, DRAGON_NAME, DRAGON_ID);
+           initialization = new GameIntializer(this);
 
-               initialization = new GameIntializer(this);
-
-               for (CommandKeyword word: CommandKeyword.values()) {
-                   getCommand(word.getWord()).setExecutor(initialization);
-               }
+           for (CommandKeyword word : CommandKeyword.values()) {
+               getCommand(word.getWord()).setExecutor(initialization);
            }
-           catch (Exception e)
-           {
-               sender.sendPlayerMessage("Unable to register the Ender dragon. The game cannot proceed at this point.", ChatSender.GameState.ERROR);
-               getServer().getPluginManager().disablePlugin(this);
-           }
+
+
        }
-
-
-
+       catch (BedWarsException e) {
+           sender.sendConsoleMessage(e.getMessage(), Level.WARNING);
+       }
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public void onDisable()
-    {
-        ChatSender sender = ChatSender.getInstance();
+
+    @SuppressWarnings("unchecked")
+    public void replaceClass(Class<? extends Entity> replace, String name, int id) throws BedWarsException {
+
+
         try {
             Field c = EntityTypes.class.getDeclaredField("c");
             c.setAccessible(true);
-            Map<String, Class<? extends Entity>> cMap = (Map<String, Class<? extends Entity>>) c.get(EntityTypes.class);
-            cMap.remove(DRAGON_NAME);
+            Map<String, Class<? extends Entity>> map = (Map<String, Class<? extends Entity>>) c.get(EntityTypes.class);
+            map.remove(name);
+
 
             Field e = EntityTypes.class.getDeclaredField("e");
             e.setAccessible(true);
             Map<Integer, Class<? extends Entity>> eMap = (Map<Integer, Class<? extends Entity>>) e.get(EntityTypes.class);
-            eMap.remove(DRAGON_ID);
+            eMap.remove(id);
 
-            Method aMethod = EntityTypes.class.getDeclaredMethod("a",Class.class,String.class,int.class);
+            Method aMethod = EntityTypes.class.getDeclaredMethod("a", Class.class, String.class, int.class);
             aMethod.setAccessible(true);
-            aMethod.invoke(EntityTypes.class, EntityEnderDragon.class, DRAGON_NAME, DRAGON_ID);
-
+            aMethod.invoke(EntityTypes.class, replace, name, id);
         }
-        catch (Exception e)
+        catch (Exception e) {
+         throw new RegistrationException("Could not replace "+replace.getSimpleName()+"");
+        }
+
+    }
+
+
+
+    @Override
+    public void onDisable()
+    {
+        ChatSender sender = ChatSender.getInstance();
+        try {
+          replaceClass(dragon, DRAGON_NAME,DRAGON_ID);
+        }
+        catch (BedWarsException e)
         {
             sender.sendConsoleMessage("Failed to unregister Ender Dragon Override.", Level.WARNING);
         }
         
 
-
-
         if (initialization==null)
             return;
+
+        if (initialization.getArena() == null)
+            return;
+
 
         if (initialization.getRunner()==null)
             return;
@@ -142,7 +143,7 @@ public final class BedWars extends JavaPlugin
         runner.setRunning(false);
         initialization.getArena().getTeams().forEach((string, team) -> {
             if (team!=null&&team.getForge()!=null)
-            team.getForge().disableForge();
+                team.getForge().disableForge();
         });
       PacketHandler handler = runner.getPacketHandler();
 
@@ -152,7 +153,7 @@ public final class BedWars extends JavaPlugin
       }
 
       if (runner.getLoader() != null)
-      runner.getLoader().stop();
+            runner.getLoader().stop();
 
         World world = initialization.getArena().getWorld();
         Scoreboard initial = ((CraftWorld)world).getHandle().getScoreboard();
@@ -172,44 +173,7 @@ public final class BedWars extends JavaPlugin
 
 
         Arena arena = initialization.getArena();
-        if (arena == null)
-            return;
-
-
-            StringHelper box = new StringHelper(this);
-            Collection<BattlePlayer> registered = arena.getPlayers().values();
-
-        //writing to bar file
-            registered.forEach(battlePlayer -> {
-
-                HotbarManager barManager = battlePlayer.getBarManager();
-                if (barManager != null) {
-                    ItemCategory[] barItems = barManager.getLayout();
-
-                    GameFileWriter barWriter = new GameFileWriter(box.getHotBarPath(battlePlayer.getRawPlayer()), this);
-                    barWriter.clear();
-                    ArrayList<String> valueList = new ArrayList<>();
-
-                    Arrays.stream(barItems).forEach(item -> valueList.add(
-                            item == null ? null : item.toString()));
-                    barWriter.write(valueList, false);
-                }
-
-
-               //writing to shop file
-                PlayerInventoryManager invManager = battlePlayer.getShopManager();
-                if (invManager!=null) {
-                    QuickBuySection playerShop = invManager.getQuickBuy();
-                    ArrayList<ShopItemSet> shopSet = playerShop.packageInventory();
-
-                    GameFileWriter shopWriter = new GameFileWriter(box.getInventoryPath(battlePlayer.getRawPlayer()), this);
-                   shopWriter.clear();
-                    ArrayList<String> shopList = new ArrayList<>();
-                    shopSet.forEach(pack -> shopList.add(pack == null ? ShopItem.EMPTY_SLOT.name() : pack.toString()));
-                    shopWriter.write(shopList, false);
-                }
-            });
-
+        writeToFiles(arena);
 
         //Save all the players things here and put them into their files.
     }
@@ -220,14 +184,45 @@ public final class BedWars extends JavaPlugin
     }
 
 
+    private void writeToFiles(Arena arena) {
+        Collection<BattlePlayer> registered = arena.getPlayers().values();
+
+        //writing to bar file
+        registered.forEach(battlePlayer -> {
+
+            HotbarManager barManager = battlePlayer.getBarManager();
+            if (barManager != null) {
+                ItemCategory[] barItems = barManager.getLayout();
+
+                GameFileWriter barWriter = new GameFileWriter(StringHelper.getHotBarPath(battlePlayer.getRawPlayer()), this);
+                barWriter.clear();
+                ArrayList<String> valueList = new ArrayList<>();
+
+                Arrays.stream(barItems).forEach(item -> valueList.add(
+                        item == null ? null : item.toString()));
+                barWriter.write(valueList, false);
+            }
+
+
+            //writing to shop file
+            PlayerInventoryManager invManager = battlePlayer.getShopManager();
+            if (invManager!=null) {
+                QuickBuyInventory playerShop = invManager.getQuickBuy();
+                ArrayList<ShopItemSet> shopSet = playerShop.packageInventory();
+
+                GameFileWriter shopWriter = new GameFileWriter(StringHelper.getInventoryPath(battlePlayer.getRawPlayer()), this);
+                shopWriter.clear();
+                ArrayList<String> shopList = new ArrayList<>();
+                shopSet.forEach(pack -> shopList.add(pack == null ? ShopItem.EMPTY_SLOT.name() : pack.toString()));
+                shopWriter.write(shopList, false);
+            }
+        });
+    }
+
+
     /*
 TODO: (In the very near future)
- - Find a better solution to the explosives problem. [IN PROGRESS]
-  + fireballs, accurate in terms of block damage.
-   + fireball explosions (where they explode) are shifted. Bad.
-  + tnt is not accurate
  - add tracker shop & quick comms
- - HB manager: If you use the number keys to buy items, then it goes to that number slot, not the set slot
  - Fire still spreads! <-- bad (Doesn't fade or burn out though)
   + Also, might wanna make sure that you don't have fire floating around on air
 

@@ -3,15 +3,22 @@ package me.camm.productions.bedwars.Arena.GameRunning;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Generators.Generator;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.ActionSelectionInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickChatInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
+import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Util.Locations.Coordinate;
 import me.camm.productions.bedwars.Util.Locations.Boundaries.GameBoundary;
 import me.camm.productions.bedwars.Util.Locations.RegisterType;
 import me.camm.productions.bedwars.Util.PacketSound;
+import me.camm.productions.bedwars.Validation.BedWarsException;
+import me.camm.productions.bedwars.Validation.RegistrationException;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
@@ -51,11 +58,18 @@ public class Arena
   private static int playerAssignment;
 
 
+  private volatile boolean settingUp;
+  boolean spent;
+
+
 
   //objectives for the health above the name tags, and in the tablist
   private final Scoreboard healthBoard;
   private final Objective nameHealth;
   private final Objective tabHealth;
+
+
+  private final ChatSender sender;
 
     //we can't have a single scoreboard for each player because each board is different for each player, but we can have one
     //single board for displaying the health.
@@ -65,8 +79,12 @@ public class Arena
     private final Map<UUID, BattlePlayer> players;
 
 
+    private IGameInventory chatInv;
+    private IGameInventory selectionInv;
 
-    /**
+
+
+    /*
      *
      * Constructor.
      *
@@ -80,6 +98,12 @@ public class Arena
   {
 
 
+      chatInv = new QuickChatInventory(this);
+      selectionInv = new ActionSelectionInventory(this);
+
+      sender = ChatSender.getInstance();
+      settingUp = false;
+      spent = false;
       playerAssignment = 0;
       this.bounds = bounds;
       this.voidLevel = voidLevel;
@@ -125,7 +149,17 @@ public class Arena
             player.getTeam().removePlayer(player.getRawPlayer());
             players.remove(uuid);
 
+            player.unregister(healthBoard);
+
         }
+    }
+
+    public IGameInventory getChatInv(){
+      return chatInv;
+    }
+
+    public IGameInventory getSelectionInv(){
+      return selectionInv;
     }
 
     //adds a player to the arena. DOES NOT register them. You need to do that separately.
@@ -166,20 +200,67 @@ public class Arena
   }
 
   //registers the map
-  public void registerMap()
+  public void registerMap() throws BedWarsException
   {
-      bounds.register(world, ARENA.getData(), RegisterType.EVERYTHING.getType(),plugin); //registering the playable area
-     bounds.registerButNotBlockOrAir(world,MAP.getData(),plugin,Material.BED_BLOCK);  //registering all blocks to map blocks except for beds
+      if (isRegistering())
+          throw new RegistrationException("Concurrent request for set up. The arena is already doing so!");
+
+      final long time = System.currentTimeMillis();
+
+      new BukkitRunnable() {
+          @Override
+          public void run() {
+
+              setRegistering(true);
+
+              bounds.register(world, ARENA.getData(), RegisterType.EVERYTHING.getType(),plugin); //registering the playable area
+              bounds.registerButNotBlockOrAir(world,MAP.getData(),plugin,Material.BED_BLOCK);  //registering all blocks to map blocks except for beds
 
 
-      for (Generator generator: generators)
-          generator.registerBox();
+              for (Generator generator: generators)
+                  generator.registerBox();
+
+              setRegistering(false);
+             sender.sendMessage("Registered map zones! ("+(System.currentTimeMillis() - time)+" ms)");
+              cancel();
+
+          }
+      }.runTask(plugin);
+
+  }
+
+
+  public synchronized boolean isRegistering(){
+      return settingUp;
+  }
+
+  public synchronized void setRegistering(boolean setting){
+      settingUp = setting;
+  }
+
+  public void unregisterMap(){
+      bounds.unregister(world, ARENA.getData(), plugin);
+      bounds.unregister(world, MAP.getData(),plugin);
+
+     for (BattleTeam team:  teams.values()) {
+         team.unregisterBase();
+         team.empty();
+     }
+     spent = true;
+
+  }
+
+  public boolean isSpent(){
+      return spent;
   }
 
   //registers the zones for the teams
   public void registerTeamZones()
   {
+      long time = System.currentTimeMillis();
       teams.forEach((String,team) -> team.registerBase());
+      sender.sendMessage("Registered Team zones! ("+(System.currentTimeMillis() - time)+" ms)");
+
   }
 
   public int[] getTeamColorsAsInt()
@@ -217,7 +298,7 @@ public class Arena
       for (BattlePlayer player: players.values())
       {
           if (origin.distanceSquared(player.getRawPlayer().getLocation()) < distance)
-          player.playSound(sound);
+            player.playSound(sound);
       }
   }
 

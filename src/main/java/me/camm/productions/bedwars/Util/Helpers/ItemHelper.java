@@ -2,8 +2,10 @@ package me.camm.productions.bedwars.Util.Helpers;
 
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Players.Managers.HotbarManager;
+import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Items.ItemDatabases.*;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.HotBarConfig;
+import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Util.DataSets.ShopItemSet;
 import me.camm.productions.bedwars.Util.PacketSound;
 import net.minecraft.server.v1_8_R3.NBTTagCompound;
@@ -32,8 +34,8 @@ import java.util.*;
 
 import static me.camm.productions.bedwars.Items.ItemDatabases.BattleEnchantment.*;
 import static me.camm.productions.bedwars.Items.ItemDatabases.ShopItem.SHEARS;
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.QUICK_INV_BORDER_END;
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.QUICK_INV_BORDER_START;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty.QUICK_INV_BORDER_END;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty.QUICK_INV_BORDER_START;
 import static me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory.*;
 import static me.camm.productions.bedwars.Items.ItemDatabases.LorePhrases.COST;
 import static me.camm.productions.bedwars.Items.ItemDatabases.LorePhrases.SELL;
@@ -412,17 +414,21 @@ public class ItemHelper
             case ARMOR:
             case NONE:
             case NAV:
-            case SEPARATOR:
+            case SEPARATOR: {
+
                 //These aren't placed into the player inventory, but instead do stuff important,
                 //so they're not "sold" here.
+            }
                 break;
 
-            case POTION:
+            case POTION: {
                 stack = getPotion(item);
+            }
                 break;
 
-            case TOOLS:
+            case TOOLS: {
                 stack = toDegradableTool(item);
+            }
                 break;
 
             case MELEE:
@@ -434,21 +440,23 @@ public class ItemHelper
             }
                 break;
 
-            case RANGED:
+            case RANGED: {
                 stack = toRangedItem(item);
+            }
                 break;
 
-            case BLOCK:
-                byte color = (byte)player.getTeam().getTeamColor().getValue();
-                stack = addBlockColor(color,item);
+            case BLOCK: {
+                byte color = (byte) player.getTeam().getTeamColor().getValue();
+                stack = addBlockColor(color, item);
+            }
                 break;
 
             default: {
 
                 if (item== ShopItem.DREAM_DEFENDER)
                     stack = new ItemStack(item.sellMaterial,1,EntityType.IRON_GOLEM.getTypeId());
-                    else
-                stack = new ItemStack(item.sellMaterial, item.sellAmount);
+                else
+                    stack = new ItemStack(item.sellMaterial, item.sellAmount);
             }
         }
 
@@ -510,12 +518,12 @@ public class ItemHelper
 
 
 
-    //creates the item that is to be displayed in the shop, with price depending on player number
+    //creates the item that is to be displayed in th e shop, with price depending on player number
     @SuppressWarnings("deprecation")
     public static ItemStack toDisplayItem(ShopItem item, boolean isInflated)
     {
-       // System.out.println("to display item: "+item.name+": inflated: "+isInflated);
         ItemCategory category = item.category;
+
 
         ItemStack stack;
 
@@ -1173,7 +1181,7 @@ public class ItemHelper
             if (mat == item.sellMaterial)
                 return item;
 
-            return null;
+        return null;
 
     }
 

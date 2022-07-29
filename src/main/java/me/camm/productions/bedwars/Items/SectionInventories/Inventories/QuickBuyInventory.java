@@ -1,31 +1,33 @@
 package me.camm.productions.bedwars.Items.SectionInventories.Inventories;
 
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.DefaultQuickItemConfig;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
-import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventorySetter;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventory;
 import me.camm.productions.bedwars.Util.DataSets.ItemStackSet;
 import me.camm.productions.bedwars.Util.DataSets.ShopItemSet;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
+import org.bukkit.inventory.Inventory;
 
 
 import java.util.ArrayList;
 
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.*;
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryName.QUICK_BUY;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty.*;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName.QUICK_BUY;
 
 /**
  * @author CAMM
  * This inventory models a section inventory in the quick buy
  */
-public class QuickBuySection extends ShopInventorySetter {
+public class QuickBuyInventory extends ShopInventory {
    private ArrayList<ShopItemSet> values;
 
-    public QuickBuySection(boolean isInflated, ArrayList<ShopItemSet> values)
+    public QuickBuyInventory(boolean isInflated, ArrayList<ShopItemSet> values, Arena arena)
     {
-        super(null,SHOP_SIZE.getValue(),QUICK_BUY.getTitle(),isInflated);
+        super(null,SHOP_SIZE.getValue(),QUICK_BUY.getTitle(),isInflated, arena);
 
         if (values!=null)
-        this.values = ItemHelper.filter(values);
+            this.values = ItemHelper.filter(values);
         setTemplate(isInflated,true);
         setInventoryItems();
     }
@@ -77,4 +79,11 @@ public class QuickBuySection extends ShopInventorySetter {
 
         return set;
     }
+
+    @Override
+    public boolean equals(Inventory other)
+    {
+        return super.equals((Object)other);
+    }
+
 }

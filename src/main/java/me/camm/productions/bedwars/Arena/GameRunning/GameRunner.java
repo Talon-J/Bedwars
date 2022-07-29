@@ -5,6 +5,8 @@ import me.camm.productions.bedwars.Arena.GameRunning.Events.GameEndAction;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Players.Scoreboards.PlayerBoard;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TrackerSectionInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Listeners.PacketHandler;
 import me.camm.productions.bedwars.Entities.ShopKeeper;
 import me.camm.productions.bedwars.Generators.Generator;
@@ -17,14 +19,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockCanBuildEvent;
-import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -195,9 +191,12 @@ public class GameRunner
         if (maxPlayers>2)
             isInflated = true;
 
+        TrackerSectionInventory.setInflated(isInflated);
+
         //adding the packet handler for the invisibility, etc
         this.packetHandler = new PacketHandler(keepers, arena);
         playerLogListener.initPacketHandler(packetHandler);
+
 
 
 
@@ -213,6 +212,15 @@ public class GameRunner
 
 
         //Initiating the listeners
+        initListeners();
+
+
+        start();
+
+
+    }
+
+    public void initListeners(){
 
         droppedListener = new ItemListener(arena);
         mobSpawnListener = new MobSpawnListener();
@@ -225,9 +233,9 @@ public class GameRunner
 
         PluginManager manager = plugin.getServer().getPluginManager();
         handlers = new Listener[]{droppedListener,mobSpawnListener,damageListener,blockListener,explosionListener,itemListener,projectileListener};
-       for (Listener listener: handlers) {
-           manager.registerEvents(listener, plugin);
-       }
+        for (Listener listener: handlers) {
+            manager.registerEvents(listener, plugin);
+        }
 
 
         for (BattlePlayer player: registered)
@@ -241,10 +249,6 @@ public class GameRunner
         npcManager = new EntityActionListener.LocationManager(plugin,arena,keepers,packetHandler,this);
         Thread thread = new Thread(npcManager);
         thread.start();
-
-        start();
-
-
     }
 
 
@@ -488,8 +492,12 @@ as a string.
         npcManager.setRunning(false);
         boundaryLoader.stop();
 
-        for (BattleTeam all : teams)
-            all.getForge().disableForge();
+        for (BattleTeam team : teams) {
+            team.getForge().disableForge();
+            team.getTeamQuickBuy().removeNPC();
+            team.getTeamGroupBuy().removeNPC();
+
+        }
 
 
         if (candidate!=null) {
@@ -517,18 +525,16 @@ as a string.
            player.removeInvisibilityEffect();
 
 
+
             for (Player possiblyHidden: Bukkit.getOnlinePlayers()) {
                 player.getRawPlayer().showPlayer(possiblyHidden);
             }
         }
 
+        HandlerList.unregisterAll(plugin);
+        arena.unregisterMap();
 
-        PlayerLoginEvent.getHandlerList().unregister(playerLogListener);
-        PlayerQuitEvent.getHandlerList().unregister(playerLogListener);
-        BlockBreakEvent.getHandlerList().unregister(blockListener);
-        BlockPlaceEvent.getHandlerList().unregister(blockListener);
-        BlockCanBuildEvent.getHandlerList().unregister(blockListener);
-        BlockFromToEvent.getHandlerList().unregister(blockListener);
+
     }
 
 
@@ -568,7 +574,8 @@ as a string.
         return isInflated;
     }
 
-    public Inventory getJoinInventory(){
+
+    public IGameInventory getJoinInventory(){
         return invListener.getJoinInventory();
     }
 

@@ -6,7 +6,6 @@ import me.camm.productions.bedwars.Files.FileKeywords.WorldFileKeyword;
 import me.camm.productions.bedwars.Generators.Generator;
 import me.camm.productions.bedwars.Generators.GeneratorType;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
-import me.camm.productions.bedwars.Util.Helpers.StringHelper;
 import me.camm.productions.bedwars.Util.Locations.Coordinate;
 import me.camm.productions.bedwars.Util.Locations.Boundaries.GameBoundary;
 import me.camm.productions.bedwars.Validation.BedWarsException;
@@ -25,9 +24,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import static me.camm.productions.bedwars.Files.FileKeywords.FilePaths.WORLD;
+import static me.camm.productions.bedwars.Util.Helpers.StringHelper.*;
 
 
-public class WorldFileReader extends StringHelper
+public class WorldFileReader
 {
 
     private World world;
@@ -41,7 +41,7 @@ public class WorldFileReader extends StringHelper
 
     public WorldFileReader(Plugin plugin)
     {
-        super(plugin);
+
         this.plugin = plugin;
 
         this.world = null;
@@ -194,7 +194,7 @@ public class WorldFileReader extends StringHelper
                     }
                 }
                 catch (BedWarsException e) {
-                     sender.sendPlayerMessage(e.getMessage(), ChatSender.GameState.WARN);
+                     sender.broadcastMessage(e.getMessage(), ChatSender.GameState.WARN);
                 }
             }
 
@@ -202,7 +202,7 @@ public class WorldFileReader extends StringHelper
         }
         catch (IOException e)
         {
-          sender.sendPlayerMessage(e.getMessage(), ChatSender.GameState.WARN);
+          sender.broadcastMessage(e.getMessage(), ChatSender.GameState.WARN);
         }
 
 

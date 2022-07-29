@@ -104,7 +104,7 @@ public class ExecutableBoundaryLoader implements Runnable
 
 
 
-                                BattleTeam current = null;
+                            BattleTeam current = null;
 
                                 for (BattleTeam team: primedTraps)
                                 {
@@ -157,7 +157,7 @@ public class ExecutableBoundaryLoader implements Runnable
                                 break HEALS;
 
 
-                                for (BattleTeam team: healAuras)
+                            for (BattleTeam team: healAuras)
                                 {
                                     Coordinate coordinate = team.getAura().getRandomCoordinateWithin();
                                     team.sendTeamPacket(new PacketPlayOutWorldParticles(EnumParticle.VILLAGER_HAPPY,true,(float)coordinate.getX(),(float)coordinate.getY(),(float)coordinate.getZ(),0,0,0,(float)0.1,5));

@@ -159,12 +159,13 @@ public class LogListener implements Listener//, IArenaChatHelper, IArenaWorldHel
         boolean isBedExists;
 
         Map<UUID,BattlePlayer> registeredPlayers = arena.getPlayers();
+        UUID id = player.getUniqueId();
 
-        if (!registeredPlayers.containsKey(event.getPlayer().getUniqueId())) //if the uuids are the same
+        if (!registeredPlayers.containsKey(id)) //if the uuids are the same
             return;
 
 
-        current = registeredPlayers.get(event.getPlayer().getUniqueId());
+        current = registeredPlayers.get(id);
         team = current.getTeam();
 
 
@@ -180,6 +181,12 @@ public class LogListener implements Listener//, IArenaChatHelper, IArenaWorldHel
             else
                 current.handlePlayerRespawn(packetHandler);
 
+        }
+
+        if (arena.isSpent()) {
+            current.sendMessage(ChatColor.YELLOW+"The game is over.");
+            current.printStatistics();
+            return;
         }
 
         current.getRawPlayer().setScoreboard(arena.getHealthBoard());  //refreshing the board.

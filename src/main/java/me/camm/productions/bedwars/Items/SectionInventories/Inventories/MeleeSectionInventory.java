@@ -1,9 +1,11 @@
 package me.camm.productions.bedwars.Items.SectionInventories.Inventories;
 
-import me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty;
-import me.camm.productions.bedwars.Items.ItemDatabases.InventoryName;
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.MeleeConfig;
-import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventorySetter;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventory;
+import org.bukkit.inventory.Inventory;
 
 
 /**
@@ -11,10 +13,10 @@ import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInvent
  * This inventory models a section inventory in the quick buy
  */
 //Universal for all players
-public class MeleeSectionInventory extends ShopInventorySetter {
+public class MeleeSectionInventory extends ShopInventory {
 
-    public MeleeSectionInventory(boolean isInflated) {
-        super(null, InventoryProperty.SHOP_SIZE.getValue(), InventoryName.MELEE.getTitle(),isInflated);
+    public MeleeSectionInventory(boolean isInflated, Arena arena) {
+        super(null, InventoryProperty.SHOP_SIZE.getValue(), InventoryName.MELEE.getTitle(),isInflated,arena);
         super.setTemplate(isInflated,false);
        setInventoryItems();
     }
@@ -24,4 +26,12 @@ public class MeleeSectionInventory extends ShopInventorySetter {
         for (MeleeConfig config: MeleeConfig.values())
             setItem(config.getSlot(),config.getItem(),isInflated);
     }
+
+    @Override
+    public boolean equals(Inventory other)
+    {
+        return super.equals((Object)other);
+    }
+
+
 }

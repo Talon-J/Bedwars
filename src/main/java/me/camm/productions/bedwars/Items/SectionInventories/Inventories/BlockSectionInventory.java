@@ -1,11 +1,13 @@
 package me.camm.productions.bedwars.Items.SectionInventories.Inventories;
 
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.BlockConfig;
-import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventorySetter;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventory;
+import org.bukkit.inventory.Inventory;
 
 
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.SHOP_SIZE;
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryName.BLOCKS;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty.SHOP_SIZE;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName.BLOCKS;
 
 
 /**
@@ -13,11 +15,11 @@ import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryName.BLOC
  * This inventory models a section inventory in the quick buy
  */
 //Universal for all players
-public class BlockSectionInventory extends ShopInventorySetter {
+public class BlockSectionInventory extends ShopInventory {
 
-    public BlockSectionInventory(boolean isInflated)
+    public BlockSectionInventory(boolean isInflated, Arena arena)
     {
-        super(null,SHOP_SIZE.getValue(),BLOCKS.getTitle(),isInflated);
+        super(null,SHOP_SIZE.getValue(),BLOCKS.getTitle(),isInflated,arena);
         setTemplate(isInflated,false);
         setInventoryItems();
     }
@@ -28,6 +30,14 @@ public class BlockSectionInventory extends ShopInventorySetter {
         for (BlockConfig config: BlockConfig.values())
             setItem(config.getSlot(),config.getItem(), isInflated);
     }
+
+
+    @Override
+    public boolean equals(Inventory other)
+    {
+        return super.equals((Object)other);
+    }
+
 
 }
 

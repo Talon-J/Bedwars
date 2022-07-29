@@ -5,14 +5,17 @@ import me.camm.productions.bedwars.Arena.GameRunning.GameRunner;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamColor;
+import me.camm.productions.bedwars.BedWars;
 import me.camm.productions.bedwars.Files.FileStreams.TeamFileReader;
 import me.camm.productions.bedwars.Files.FileStreams.WorldFileReader;
-import me.camm.productions.bedwars.Listeners.PacketHandler;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Validation.BedWarsException;
+import me.camm.productions.bedwars.Validation.RegistrationException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
@@ -33,6 +36,7 @@ public class CommandProcessor {
     private GameRunner runner;
     private final ChatSender messager;
 
+
     public CommandProcessor(){
         runner = null;
         messager = ChatSender.getInstance();
@@ -49,9 +53,9 @@ public class CommandProcessor {
 
         //make sure they have the permission
         if (noPermission(sender, SETUP))
-            throw new PermissionException("You don't have permission!");
+            throw getPermException(SETUP);
 
-        messager.sendMessage("Attempting to register the map. Expect some lag.");
+
 
         //try to read the config from the config files and make a new
         //arena object
@@ -61,31 +65,38 @@ public class CommandProcessor {
         ArrayList<BattleTeam> teams;
         WorldFileReader fileReader = new WorldFileReader(plugin);
 
-
             arena = fileReader.read();
-
-
-
 
 
         if (arena==null)
             throw new InitializationException("Was not able to init the arena! (Check the config)");
 
-           teams = new TeamFileReader(plugin, arena).read();
-            arena.registerMap();
+
+        messager.sendMessage("Attempting to register the map. Expect some lag.");
+
+        arena.registerMap();
+
+        try {
+            teams = new TeamFileReader(plugin, arena).read();
+        }
+        catch (NullPointerException e) {
+            throw new InitializationException(e.getMessage());
+        }
+
 
             //ensure that there are teams for opposition in the game
             //if valid, then register their areas from the config and put them into
             //the arena
             if (teams==null||teams.size()<=1)
-            throw new InitializationException("The teams are invalid!"+
-                    (teams==null?("teams are not defined"):("There must be more than 1 team")));
+                throw new InitializationException("The teams are invalid!"+
+                    (teams==null?(" teams are not defined"):(" There must be more than 1 team")));
 
-                arena.addTeams(teams);
-                runner = new GameRunner(plugin, arena);
-                arena.registerTeamZones();
+            arena.addTeams(teams);
+            runner = new GameRunner(plugin, arena);
+            arena.registerTeamZones();
 
-              //  plugin.getServer().getPluginManager().registerEvents(runner, plugin);
+
+
 
                 this.runner = runner;
                 return runner;
@@ -103,7 +114,7 @@ public class CommandProcessor {
 
         //check if they have perms
         if (noPermission(sender, SHOUT))
-        throw new PermissionException("You don't have permission!");
+            throw getPermException(SHOUT);
 
         if (runner==null || !runner.isRunning())
             throw new StateException("The game is not running!");
@@ -125,7 +136,7 @@ public class CommandProcessor {
 
         //send the message
         TeamColor color = current.getTeam().getTeamColor();
-       this.messager.sendPlayerMessage(ChatColor.YELLOW+"[SHOUT]"+
+       this.messager.broadcastMessage(ChatColor.YELLOW+"[SHOUT]"+
                 color.getChatColor()+"<"+current.getRawPlayer().getName()+">"+ChatColor.GRAY+message,null);
 
     }
@@ -140,7 +151,7 @@ public class CommandProcessor {
      */
     public void startGame(CommandSender sender) throws BedWarsException {
         if (noPermission(sender, START))
-            throw new PermissionException("You don't have permission!");
+            throw getPermException(START);
 
         if (runner==null)
             throw new StateException("The arena is not set up!");
@@ -149,7 +160,7 @@ public class CommandProcessor {
             throw new StateException("The game is already running!");
 
 
-            Collection<BattleTeam> values = runner.getArena().getTeams().values();
+        Collection<BattleTeam> values = runner.getArena().getTeams().values();
 
 
            int notOpposed = values.size();
@@ -164,7 +175,7 @@ public class CommandProcessor {
            //    if (!(notOpposed<2)) //game can start b/c there are at least 2 teams
                    runner.prepareAndStart();
            //     else
-            //       throw new StateException("There must be opposition!");
+            //       throw new StateException("There must be opposition for a game to start!");
 
 
 
@@ -178,7 +189,7 @@ public class CommandProcessor {
     public void manualEndGame(CommandSender sender) throws BedWarsException {
 
         if (noPermission(sender, END)) {
-            throw new PermissionException("You have no permission!");
+            throw getPermException(END);
         }
 
         if (runner == null || !runner.isRunning())
@@ -196,20 +207,23 @@ public class CommandProcessor {
      * Attempts to register a player
      *
      *
-     * @param sender sender of the command
-     * @throws BedWarsException if conditions are not met
+     * @param sender Sender of the command
+     * @throws BedWarsException if conditions are not met for safe registration
      */
     public void registerPlayer(Player sender) throws BedWarsException{
         if (noPermission(sender, REGISTER))
-            throw new PermissionException("You have no permission!");
+            throw getPermException(REGISTER);
 
         if (runner==null)
-        throw new StateException("The arena is not setup!");
+            throw new StateException("The arena is not setup!");
+
+        if (runner.getArena().isRegistering())
+            throw new StateException("The arena is still in the process of registering zones!");
 
         if (runner.isRunning())
             throw new StateException("The game is running! Wait for it to finish first!");
 
-        sender.openInventory(runner.getJoinInventory());
+        sender.openInventory((Inventory)runner.getJoinInventory());
     }
 
 
@@ -226,7 +240,7 @@ public class CommandProcessor {
 
 
         if (noPermission(player, UNREGISTER))
-            throw new PermissionException("You have no permission!");
+            throw getPermException(UNREGISTER);
 
         if (runner == null) {
             throw new StateException("The arena is not set up!");
@@ -251,6 +265,18 @@ public class CommandProcessor {
      */
     private boolean noPermission(CommandSender sender, CommandKeyword word) {
         return !sender.hasPermission(word.getPerm());
+    }
+
+    private BedWarsException getPermException(CommandKeyword word){
+        Plugin p = BedWars.getPlugin();
+        PluginCommand command = p.getServer().getPluginCommand(word.getWord());
+        if (command == null)
+            return new PermissionException("You have no permission!");
+
+
+        String permMessage = command.getPermissionMessage();
+        return new PermissionException(permMessage == null ? "You have no permission!": permMessage);
+
     }
 
 }

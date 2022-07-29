@@ -7,15 +7,15 @@ import me.camm.productions.bedwars.Arena.Players.Managers.PlayerInventoryManager
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamTraps.*;
 import me.camm.productions.bedwars.Generators.Forge;
-import me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Items.ItemDatabases.TeamItem;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyEditor;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuySection;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamBuyInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyEditorInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.HotBarConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamInventoryConfig;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryCrafting;
@@ -30,14 +30,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 public class InventoryOperationHelper
 {
-    private enum Values{
+    private enum Values {
         SLOT, HOTBAR, MOVE, SWAP, PLACE, COLLECT
     }
 
@@ -47,35 +44,25 @@ public class InventoryOperationHelper
     private final static TeamInventoryConfig[] config;
     private final static ItemStack EMPTY;
 
+   static {
+       EMPTY = ItemHelper.toDisplayItem(ShopItem.EMPTY_SLOT,false);
+       gameItems = ShopItem.values();
+       config = TeamInventoryConfig.values();
 
-    static {
-        gameItems = ShopItem.values();
-        config = TeamInventoryConfig.values();
-        EMPTY = ItemHelper.toDisplayItem(ShopItem.EMPTY_SLOT,false);
 
-    }
+   }
+
+
 
     /*
-    Code to stop the player from accidently putting things in the shop inventories
-    Note that the CURSOR is the item on the mouse AFTER the event is completed.
+    Returns whether a player has tried to place an item into a restricted inventory.
 
-    E.g swap gold onto iron, cursor is iron, not gold.
+    @param event The event in question
+    @param restrictedInv The inventory you do not want the player to place items into
+    @author CAMM
 
      */
-
-    public static boolean didTryToPlaceIn(InventoryClickEvent event, BattlePlayer player)
-    {
-        Inventory topInventory = event.getInventory();
-        Inventory section = player.getShopManager().isSectionInventory(topInventory);
-
-        return section != null && didTryToPlaceIn(event, section);
-
-    }
-
-
-
-
-    public static boolean didTryToPlaceIn(InventoryClickEvent event, Inventory restrictedInventory)
+    public static boolean handleClickAttempt(InventoryClickEvent event, Inventory restrictedInv)
     {
         InventoryAction action = event.getAction();
         String name = action.name();
@@ -86,28 +73,41 @@ public class InventoryOperationHelper
 
 
 
+        //if both inventories are not possible to be restricted, then return
+        if (!topInventory.equals(restrictedInv) &&
+                !event.getView().getBottomInventory().equals(restrictedInv) &&
+                !clickedInventory.equals(restrictedInv)) {
+
+            return false;
+        }
+
+
+
+
+        //if the player tried to shift click something into the inventory
+        // (Either from the player inv -> shop,  or shop -> player inv)
         if (event.isShiftClick() &&
-                (topInventory.equals(restrictedInventory)|| playerInventory.equals(restrictedInventory))) {
+
+                (topInventory.equals(restrictedInv) ||
+                        playerInventory.equals(restrictedInv))) {
+
             return true;
         }
-        /*
-        if the clicked inventory equals the player's inventory and the
-        top inventory is not the shop inventory
-         */
-        if (!(clickedInventory.equals(restrictedInventory)) && !(topInventory.equals(restrictedInventory))) {
 
+
+        if (!clickedInventory.equals(restrictedInv) &&
+                !( name.contains(Values.COLLECT.name()) ||
+                        name.contains(Values.MOVE.name()) ||
+                        name.contains(Values.SWAP.name()))) {
             return false;
         }
 
-        if (!clickedInventory.equals(restrictedInventory) &&
-                !(name.contains(Values.MOVE.name()) || name.contains(Values.SWAP.name()) || name.contains(Values.COLLECT.name()))) {
 
-            return false;
-        }
-
-        //Could still attempt to place out
-        return name.contains(Values.HOTBAR.name()) || name.contains(Values.PLACE.name()) || name.contains(Values.MOVE.name()) ||
-                name.contains(Values.COLLECT.name()) || name.contains(Values.SWAP.name());
+        return name.contains(Values.HOTBAR.name()) ||
+                name.contains(Values.PLACE.name()) ||
+                name.contains(Values.MOVE.name()) ||
+                name.contains(Values.COLLECT.name()) ||
+                name.contains(Values.SWAP.name());
     }
 
 
@@ -123,15 +123,24 @@ public class InventoryOperationHelper
 
 
     /*
-    Code for making sure the player doesn't lose their sword, or break away their tools into a chest
+    This method handles restrictions default for inventories, and cancels the inventory click event if
+    any restrictions are triggered.
+
+    @author CAMM
+    @param event: The event in question
+    @param arena: The arena for which the game is taking in
+    @pre: The managers for the player should be set up first before calling this method, or there may be a
+    nullpointer exception when handling sword counts
+    @return: Whether or not the event was cancelled
+
      */
-    public static void operateRestrictions(InventoryClickEvent event, Arena arena){
-       // System.out.println("[DEBUG] operate click restrict");
+    public static void handleDefaultRestrictions(InventoryClickEvent event, Arena arena){
 
         BattlePlayer clicked = arena.getPlayers().getOrDefault(event.getWhoClicked().getUniqueId(),null);
 
         if (clicked == null)
             return;
+
 
         Inventory topInv = event.getInventory();
         Inventory clickedInv = event.getClickedInventory();
@@ -141,13 +150,19 @@ public class InventoryOperationHelper
         ItemStack clickedItem = event.getCurrentItem();
         ItemStack cursorItem = event.getCursor();
 
-        if (topInv instanceof CraftInventoryCrafting)
+
+        if (!ItemHelper.isItemInvalid(cursorItem) && ItemHelper.isArmor(cursorItem.getType())) {
+            event.setCancelled(true);
+            return;
+        }
+
+        //If the top inventory is an inventory for crafting, and they clicked in the top inventory
+        //a crafting inventory in this case would be the player's own crafting grid, since we already cancel interactions with
+        //crafting tables
+        if (topInv instanceof CraftInventoryCrafting && clickedInv.equals(topInv))
         {
-            //if they clicked on the crafting inventory.
-            if (clickedInv.equals(topInv)) {
-                event.setCancelled(true);
-                return;
-            }
+          event.setCancelled(true);
+          return;
         }
 
         //we now know they clicked on a chest inv (top inv is chest inv) or their own inv
@@ -157,12 +172,14 @@ public class InventoryOperationHelper
             if (!topInv.equals(clickedInv))
             {
                 break CLICKED_IN_CHEST;
+
             }
                 //if they tried to put something into chest
 
             //if they didn't try to place in the chest, then break (2nd check)
-            if (!didTryToPlaceIn(event, clickedInv))
+            if (!handleClickAttempt(event, clickedInv))
                 break CLICKED_IN_CHEST;
+
 
 
 
@@ -229,7 +246,6 @@ public class InventoryOperationHelper
             }
 
 
-
                     //if it's restricted, then cancel the event. (Note that may be air)
                     if (ItemHelper.isInventoryPlaceRestrict(cursorItem) || ItemHelper.isInventoryPlaceRestrict(clickedItem))
                     {
@@ -274,6 +290,7 @@ public class InventoryOperationHelper
 
                  */
         }
+
     }
 
 
@@ -286,9 +303,11 @@ public class InventoryOperationHelper
         if (amount != 1) {
             ItemStack shopItem = ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,clicked);
             ItemHelper.clearAll(shopItem,playerInv);
+            //we clear all wooden swords
 
             int swords = ItemHelper.countSwords(playerInv);
             if (swords == 0) {
+                //and if they still have swords (they are not wooden, then we return, else we give them one)
                 clicked.getBarManager().set(shopItem, ShopItem.WOODEN_SWORD, clicked.getRawPlayer());
             }
         }
@@ -297,7 +316,7 @@ public class InventoryOperationHelper
 
 
 
-    public static void operateRestrictions(InventoryDragEvent event, Arena arena)
+    public static void handleDefaultRestrictions(InventoryDragEvent event, Arena arena)
     {
 
         BattlePlayer clicked = arena.getPlayers().getOrDefault(event.getWhoClicked().getUniqueId(),null);
@@ -362,16 +381,16 @@ public class InventoryOperationHelper
 
 
 
-    public static void doTeamBuy(InventoryClickEvent event, Arena arena) {
+    public static void sellTeamBuy(InventoryClickEvent event, Arena arena) {
 
         BattlePlayer clicked = arena.getPlayers().getOrDefault(event.getWhoClicked().getUniqueId(),null);
         if (clicked == null)
             return;
 
         BattleTeam team = clicked.getTeam();
-        TeamBuyInventory teamInventory = team.getTeamInventory();
+        IGameInventory teamInventory = team.getTeamInventory();
 
-        if (event.getClickedInventory().equals(teamInventory)||didTryToPlaceIn(event,teamInventory)) {
+        if (event.getClickedInventory().equals(teamInventory) || handleClickAttempt(event,(Inventory)teamInventory)) {
             event.setCancelled(true);
         }
 
@@ -680,16 +699,12 @@ public class InventoryOperationHelper
         if (player == null)
             return;
 
-        QuickBuyEditor editor = player.getQuickEditor();
+        QuickBuyEditorInventory display = player.getQuickEditor();
         Inventory clicked = event.getClickedInventory();
 
 
-        Inventory display = editor.getEditor();
-
-
-
         //also need to account for dragging
-        if (didTryToPlaceIn(event, display)) {
+        if (handleClickAttempt(event, display)) {
             event.setCancelled(true);
         }
 
@@ -701,8 +716,8 @@ public class InventoryOperationHelper
                 return;
 
             event.setCancelled(true);
-            editor.applyConfigChange(slot);
-            QuickBuySection section = player.getShopManager().getQuickBuy();
+            display.applyConfigChange(slot);
+            QuickBuyInventory section = player.getShopManager().getQuickBuy();
             player.getRawPlayer().openInventory(section);
 
         }
@@ -735,8 +750,14 @@ public class InventoryOperationHelper
 
     At this point, the inventory referenced should be guaranteed a shop inventory.
      */
-    public static void doQuickBuy(InventoryClickEvent event, Arena arena, boolean isInflated)
+    public static void sellQuickbuy(InventoryClickEvent event, Arena arena, boolean isInflated)
     {
+
+
+//
+
+
+
         Map<UUID,BattlePlayer> registeredPlayers = arena.getPlayers();
         Inventory clickedInv = event.getClickedInventory();
         HumanEntity player = event.getWhoClicked();
@@ -749,10 +770,6 @@ public class InventoryOperationHelper
 
         if (clickedInv==null||clickedInv.getTitle()==null)
             return;
-
-        //they can still buy items with an item in the cursor, just not put it in.
-        if (didTryToPlaceIn(event, currentPlayer))
-            event.setCancelled(true);
 
         ItemStack item = event.getCurrentItem();
 
@@ -800,7 +817,7 @@ public class InventoryOperationHelper
             //accounts for team enchants.
             //This section is unfinished. We need to account for if the player shift-clicks the item.
             //(We remove it from quick buy in this case)
-            QuickBuySection quickBuy = manager.getQuickBuy();
+            QuickBuyInventory quickBuy = manager.getQuickBuy();
 
             if (quickBuy.equals(clickedInv))
             {

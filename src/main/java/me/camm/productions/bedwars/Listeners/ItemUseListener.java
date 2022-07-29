@@ -19,6 +19,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -98,7 +99,7 @@ public class ItemUseListener implements Listener
                     ItemStack item = player.getItemInHand();
                     if (!ItemHelper.isItemInvalid(item) && item.getType()==Material.GLASS_BOTTLE)
                         player.setItemInHand(null);
-                        cancel();
+                    cancel();
                 }
             }.runTaskLater(plugin,1);
         }
@@ -123,7 +124,7 @@ public class ItemUseListener implements Listener
                 public void run()
                 {
                     if (System.currentTimeMillis()- battlePlayer.getLastMilk() > 30000)
-                    battlePlayer.sendMessage(ChatColor.RED+"Your Magic Milk ran out!");
+                        battlePlayer.sendMessage(ChatColor.RED+"Your Magic Milk ran out!");
                     cancel();
                 }
             }.runTaskLater(plugin,600);
@@ -241,6 +242,17 @@ public class ItemUseListener implements Listener
                             cancel();
                         }
                     }.runTaskLater(plugin,1);
+                }
+            }
+            break;
+
+
+            case COMPASS: {
+                if (action == Action.RIGHT_CLICK_BLOCK || action == Action.RIGHT_CLICK_AIR) {
+                    event.setCancelled(true);
+                    Inventory inv = (Inventory)arena.getSelectionInv();
+
+                    player.openInventory(inv);
                 }
             }
             break;

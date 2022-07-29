@@ -6,7 +6,6 @@ import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Files.FileKeywords.DataSeparatorKeys;
 import me.camm.productions.bedwars.Files.FileKeywords.TeamFileKeywords;
 import me.camm.productions.bedwars.Generators.Forge;
-import me.camm.productions.bedwars.Util.Helpers.StringHelper;
 import me.camm.productions.bedwars.Util.Locations.Boundaries.GameBoundary;
 import me.camm.productions.bedwars.Util.Locations.Coordinate;
 import me.camm.productions.bedwars.Validation.BedWarsException;
@@ -19,8 +18,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import static me.camm.productions.bedwars.Files.FileKeywords.FilePaths.TEAMS;
+import static me.camm.productions.bedwars.Util.Helpers.StringHelper.*;
 
-public class TeamFileReader extends StringHelper {
+public class TeamFileReader {
     private Forge currentForge;
     private long currentTime;
     private Coordinate currentTeamSpawn;
@@ -38,13 +38,12 @@ public class TeamFileReader extends StringHelper {
 
 
     public TeamFileReader(Plugin plugin, Arena arena) {
-        super(plugin);
         this.plugin = plugin;
         this.arena = arena;
         this.color = null;
     }
 
-    public ArrayList<BattleTeam> read() throws BedWarsException {
+    public ArrayList<BattleTeam> read() throws BedWarsException, NullPointerException {
         ArrayList<BattleTeam> teams = new ArrayList<>();
         try {
 

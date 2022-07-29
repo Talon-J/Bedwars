@@ -4,18 +4,14 @@ import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.GameRunning.GameRunner;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Players.Managers.PlayerInventoryManager;
-import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
-import me.camm.productions.bedwars.Items.ItemDatabases.InventoryName;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamJoinInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
-import me.camm.productions.bedwars.Util.Helpers.TeamHelper;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
-import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -34,8 +30,10 @@ public class InventoryListener implements Listener {
     private final GameRunner runner;
     private final HashMap<String, InventoryName> titles;
     private final Map<UUID, BattlePlayer> registeredPlayers;
-    private final Inventory joinInventory;
+    private final IGameInventory joinInventory;
     private final ChatSender sender;
+
+
 
     public InventoryListener(GameRunner runner){
         sender = ChatSender.getInstance();
@@ -46,10 +44,10 @@ public class InventoryListener implements Listener {
         InventoryName[] names = InventoryName.values();
         for (InventoryName name: names)
             titles.put(name.getTitle(),name);
-        this.joinInventory = new TeamJoinInventory(arena).getInventory();
+        this.joinInventory = new TeamJoinInventory(arena, runner);
     }
 
-    public Inventory getJoinInventory(){
+    public IGameInventory getJoinInventory(){
         return joinInventory;
     }
 
@@ -65,22 +63,53 @@ public class InventoryListener implements Listener {
             return;
         }
 
-        String title = event.getClickedInventory().getTitle();
+        HumanEntity player = event.getWhoClicked();
+        BattlePlayer battlePlayer = registeredPlayers.getOrDefault(player.getUniqueId(), null);
+        Inventory inv = event.getClickedInventory();
 
+        if (battlePlayer == null || inv.equals(joinInventory))
+        {
+            joinInventory.operate(event);
+            return;
+        }
+
+        Map<Integer, IGameInventory> monitors = battlePlayer.getAccessibleInventories();
+
+        Inventory clicked = event.getClickedInventory();
+        Inventory top = event.getView().getTopInventory();
+
+        if (!clicked.equals(top) && runner.isRunning()) {
+            InventoryOperationHelper.handleDefaultRestrictions(event, arena);
+            return;
+        }
+
+        IGameInventory gameInventory = monitors.getOrDefault(clicked.hashCode(),null);
+
+
+        if (gameInventory == null)
+            return;
+
+        gameInventory.operate(event);
+
+
+
+        boolean debug = true;
+        if (debug)
+            return;
+
+        /////////////////////
 
         //If the clicked inventory is not registered as a known inventory
-        if (!titles.containsKey(title))
+        if (!titles.containsKey(""))
         {
 
-            HumanEntity player = event.getWhoClicked();
             if (!registeredPlayers.containsKey(player.getUniqueId()))
                 return;
 
-            BattlePlayer battlePlayer = registeredPlayers.get(player.getUniqueId());
 
 
             //operate on restrictions to ensure that they didn't put a restricted item somewhere
-            InventoryOperationHelper.operateRestrictions(event, arena);
+            InventoryOperationHelper.handleDefaultRestrictions(event, arena);
 
             //if the player's inventory is not the clicked inventory, then return.
             if (!player.getInventory().equals(event.getClickedInventory()))
@@ -130,7 +159,7 @@ public class InventoryListener implements Listener {
             if (sectionInv == null && !valid)
                 return;
 
-            if (InventoryOperationHelper.didTryToPlaceIn(event,sectionInv)) {
+            if (InventoryOperationHelper.handleClickAttempt(event,sectionInv)) {
                 event.setCancelled(true);
                 return;
             }
@@ -138,18 +167,18 @@ public class InventoryListener implements Listener {
 
         }
 
-        InventoryName inventoryName = titles.get(title);
+        InventoryName inventoryName = titles.get("");
         if (inventoryName == null)
             return;
 
         if (inventoryName == InventoryName.TEAM_JOIN) {
-                addPlayerToTeam(event);
+             //   addPlayerToTeam(event);
         }
         else {
             switch (inventoryName) {
 
                 case TEAM_BUY:
-                    InventoryOperationHelper.doTeamBuy(event, arena);
+                    InventoryOperationHelper.sellTeamBuy(event, arena);
                     break;
 
                 case EDIT_QUICKBUY:
@@ -164,7 +193,7 @@ public class InventoryListener implements Listener {
                     break;
 
                 default:
-                    InventoryOperationHelper.doQuickBuy(event, arena, runner.isInflated());
+                    InventoryOperationHelper.sellQuickbuy(event, arena, runner.isInflated());
                     //do the rest of the invs here.
             }
         }
@@ -185,7 +214,7 @@ public class InventoryListener implements Listener {
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event)
     {
-        if (InventoryOperationHelper.didTryToDragIn(event, joinInventory)) {
+        if (InventoryOperationHelper.didTryToDragIn(event, (Inventory)joinInventory)) {
             event.setCancelled(true);
         }
 
@@ -203,17 +232,17 @@ public class InventoryListener implements Listener {
             return;
         }
 
-        if (InventoryOperationHelper.didTryToDragIn(event, player.getTeam().getTeamInventory())) {
+        if (InventoryOperationHelper.didTryToDragIn(event, (Inventory)player.getTeam().getTeamInventory())) {
             event.setCancelled(true);
             return;
         }
 
-        if (InventoryOperationHelper.didTryToDragIn(event, player.getQuickEditor().getEditor())) {
+        if (InventoryOperationHelper.didTryToDragIn(event, player.getQuickEditor())) {
             event.setCancelled(true);
             return;
         }
 
-        InventoryOperationHelper.operateRestrictions(event,arena);
+        InventoryOperationHelper.handleDefaultRestrictions(event,arena);
 
         if (player.getBarManager().invEquals(event.getView().getTopInventory()))
             InventoryOperationHelper.operateHotBarDrag(event, arena);
@@ -222,93 +251,6 @@ public class InventoryListener implements Listener {
 
 
 
-    /*
-    @Author CAMM
-    Adds a player to a team, or changes their team if they are already on one.
-     */
-    private void addPlayerToTeam(InventoryClickEvent event)
-    {
-        Inventory inv = event.getClickedInventory();
-        HumanEntity player = event.getWhoClicked();
 
-        if (InventoryOperationHelper.didTryToPlaceIn(event,joinInventory))
-            event.setCancelled(true);
-
-        if (!inv.equals(joinInventory)||ItemHelper.isItemInvalid(event.getCurrentItem()))
-            return;
-
-        if (runner.isRunning())
-        {
-            player.sendMessage(ChatColor.YELLOW+"Wait for the current game to finish!");
-            player.closeInventory();
-            return;
-        }
-
-        if (event.getCurrentItem().getType() != Material.WOOL)
-            return;
-
-        ItemStack stack = event.getCurrentItem();
-
-        String name = stack.getItemMeta().getDisplayName();
-        event.setCancelled(true);
-
-        Map<String, BattleTeam> arenaRegistered = arena.getTeams();
-        BattleTeam picked = arenaRegistered.getOrDefault(name, null);
-        player.closeInventory();
-        if (picked == null)
-        {
-            player.sendMessage(ChatColor.RED+"Could not find team. There might be a problem with configuration...");
-            return;
-        }
-
-
-        BattlePlayer currentPlayer;
-        HumanEntity whoClicked = event.getWhoClicked();
-
-        if (registeredPlayers.containsKey(whoClicked.getUniqueId()))  //check if the player is registered
-        {
-
-            currentPlayer = registeredPlayers.get(whoClicked.getUniqueId());
-
-            try {
-                //this may throw an exception
-                boolean isChanged = registeredPlayers.get(whoClicked.getUniqueId()).changeTeam(arena.getTeams().get(name));
-
-
-                if (isChanged)
-                {
-                    sender.sendMessage(currentPlayer.getRawPlayer().getName() + " changed their Team to " + currentPlayer.getTeam().getTeamColor() + "!");
-                    runner.initializeTimeBoardHead(currentPlayer);
-                    TeamHelper.updateTeamBoardStatus(registeredPlayers.values());
-                }
-
-
-            }
-            catch (RuntimeException e)
-            {
-                player.sendMessage(ChatColor.RED+"Could not change teams!");
-            }
-
-        }
-        else  // If they were not in the team before.
-        {
-            BattleTeam team = arena.getTeams().get(name);
-            currentPlayer = new BattlePlayer((Player) event.getWhoClicked(), team, arena, arena.assignPlayerNumber());
-            //Since the player board is initialized before the player joins, we get the incorrect amount of players on the team initially.
-
-            boolean isAdded = team.addPlayer(currentPlayer);
-
-            if (isAdded)
-            {
-             //   registeredPlayers.put(currentPlayer.getUUID(), currentPlayer);
-                arena.addPlayer(whoClicked.getUniqueId(), currentPlayer);
-                sender.sendMessage(ChatColor.GOLD + whoClicked.getName() + " Joined Team " + team.getTeamColor());
-                runner.initializeTimeBoardHead(currentPlayer);
-                TeamHelper.updateTeamBoardStatus(registeredPlayers.values());
-            } else
-                whoClicked.sendMessage(ChatColor.RED + "Could not join the team!");
-        }
-
-    }
 
 }

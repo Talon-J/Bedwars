@@ -88,7 +88,7 @@ public class EntityActionListener implements Listener
                 BattlePlayer killer = players.get(set.getEvent().getDamager().getUniqueId());
 
                 if (!victim.equals(killer))
-                handleKillerStats(killer,isFinal);
+                 handleKillerStats(killer,isFinal);
 
                 sendDeathMessage(killer,victim,null,cause, isFinal);
 
@@ -104,7 +104,7 @@ public class EntityActionListener implements Listener
                     BattlePlayer shooter = players.getOrDefault(((Player)source).getUniqueId(),null);
 
                     if (!victim.equals(shooter))
-                    handleKillerStats(shooter,isFinal);
+                     handleKillerStats(shooter,isFinal);
 
 
                     //  //(BattlePlayer killer, BattlePlayer victim, IGameTeamable involved, EntityDamageEvent.DamageCause cause, Arena arena)
@@ -166,7 +166,7 @@ public class EntityActionListener implements Listener
                     }
 
                     if (!victim.equals(owner))
-                    handleKillerStats(owner,isFinal);
+                       handleKillerStats(owner,isFinal);
 
                     //(BattlePlayer killer, BattlePlayer victim, IGameTeamable involved, EntityDamageEvent.DamageCause cause, Arena arena)
                     sendDeathMessage(owner,victim,teamable, cause, isFinal);
@@ -485,7 +485,7 @@ public class EntityActionListener implements Listener
    if (!registered.containsKey(hurt.getUniqueId()))
        return;
 
-        BattlePlayer hurtPlayer = registered.get(hurt.getUniqueId());
+   BattlePlayer hurtPlayer = registered.get(hurt.getUniqueId());
         if (!hurtPlayer.getIsAlive() ||  hurtPlayer.getIsEliminated())
         {
             event.setCancelled(true);
@@ -735,6 +735,7 @@ public class EntityActionListener implements Listener
         }
 
 
+
         @Override
         public void run()
         {
@@ -788,7 +789,7 @@ public class EntityActionListener implements Listener
                                             BattlePlayer killer = players.get(set.getEvent().getDamager().getUniqueId());
 
                                             if (!killer.getTeam().equals(player.getTeam()))
-                                            handleKillerStats(killer,isFinal);
+                                              handleKillerStats(killer,isFinal);
                                             //(BattlePlayer killer, BattlePlayer victim, IGameTeamable involved, EntityDamageEvent.DamageCause cause, Arena arena)
                                             sendDeathMessage(killer,player,null, EntityDamageEvent.DamageCause.VOID, isFinal);
                                             player.handlePlayerIntoSpectator(handler, isFinal, killer.getRawPlayer());
@@ -802,7 +803,7 @@ public class EntityActionListener implements Listener
                                                 BattlePlayer owner = ((IGameOwnable) teamable).getOwner();
 
                                                 if (!owner.getTeam().equals(player.getTeam()))
-                                                handleKillerStats(owner,isFinal);
+                                                  handleKillerStats(owner,isFinal);
 
                                                 sendDeathMessage(owner,player,teamable, EntityDamageEvent.DamageCause.VOID, isFinal);
                                                 player.handlePlayerIntoSpectator(handler, isFinal, owner.getRawPlayer());
@@ -855,7 +856,7 @@ public class EntityActionListener implements Listener
                                                 if (owner != null) {
 
                                                     if (!owner.getTeam().equals(player.getTeam()))
-                                                    handleKillerStats(owner, isFinal);
+                                                     handleKillerStats(owner, isFinal);
 
                                                     sendVoidNonDirectMessage(owner, player, Cause.TNT_VOID,isFinal);
                                                     player.handlePlayerIntoSpectator(handler, isFinal, owner.getRawPlayer());
@@ -877,7 +878,7 @@ public class EntityActionListener implements Listener
                             keepers.forEach(keeper -> {
                                 if ((raw.getLocation().distanceSquared(keeper.getLocation())>2304)&&(!player.containsNPC(keeper.getId())))
                                 {
-                                    keeper.removeNPC(raw);
+                                    keeper.unloadNPC(raw);
                                     player.addResender(keeper);
                                 }
                                 //2304 is 48 ^2. We check if the distance is comparable to 48, but without the extra calculations of sqrt
@@ -897,6 +898,7 @@ public class EntityActionListener implements Listener
             }.runTaskTimer(plugin, 0,2);
         }
     }
+
 
 }
 

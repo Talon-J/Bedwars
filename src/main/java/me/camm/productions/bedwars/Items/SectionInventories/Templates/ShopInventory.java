@@ -1,20 +1,20 @@
 package me.camm.productions.bedwars.Items.SectionInventories.Templates;
 
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
+import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Items.ItemDatabases.DefaultTemplateNavigation;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
-import me.camm.productions.bedwars.Util.DataSets.ShopItemSet;
+import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryCustom;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-
 import static me.camm.productions.bedwars.Items.ItemDatabases.DefaultTemplateNavigation.EMPTY;
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.QUICK_INV_BORDER_END;
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.QUICK_INV_BORDER_START;
 
 
 /**
@@ -22,23 +22,16 @@ import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.
  * This abstract class is used for inventory util
  */
 //this is a subclass of inventory.
-public abstract class ShopInventorySetter extends CraftInventoryCustom implements ISectionInventory
+public abstract class ShopInventory extends CraftInventoryCustom implements ISectionInventory
 {
     protected final boolean isInflated;
+    protected final Arena arena;
 
-    public ShopInventorySetter(InventoryHolder owner, InventoryType type, String title, boolean isInflated) {
-        super(owner, type, title);
-        this.isInflated = isInflated;
-    }
 
-    public ShopInventorySetter(InventoryHolder owner, int size, boolean isInflated) {
-        super(owner, size);
-        this.isInflated = isInflated;
-    }
-
-    public ShopInventorySetter(InventoryHolder owner, int size, String title, boolean isInflated) {
+    public ShopInventory(InventoryHolder owner, int size, String title, boolean isInflated, Arena arena) {
         super(owner, size, title);
         this.isInflated = isInflated;
+        this.arena = arena;
     }
 
     @Override
@@ -95,9 +88,47 @@ public abstract class ShopInventorySetter extends CraftInventoryCustom implement
         int[] range = EMPTY.getRange();
         for (int slot: range) {
             if (getItem(slot)==null || getItem(slot).getItemMeta()==null)
-            setItem(slot, EMPTY.getItem(), false);
+             setItem(slot, EMPTY.getItem(), false);
         }
 
 
     }
+
+
+    @Override
+    public void operate(InventoryClickEvent event) {
+
+
+        HumanEntity player = event.getWhoClicked();
+        Inventory playerInv = player.getInventory();
+        Inventory clicked = event.getClickedInventory();
+
+        BattlePlayer battlePlayer = arena.getPlayers().getOrDefault(player.getUniqueId(), null);
+        if (battlePlayer == null)
+        {
+            return;
+        }
+
+        InventoryOperationHelper.handleDefaultRestrictions(event, arena);
+
+        boolean cancel = InventoryOperationHelper.handleClickAttempt(event, this);
+       event.setCancelled(cancel);
+
+        //if the player's inventory is not the clicked inventory, then return.
+        if (!playerInv.equals(clicked))
+            return;
+
+        //if the enderchest is the clicked inv, then return.
+        if (player.getEnderChest().equals(clicked))
+            return;
+
+        InventoryOperationHelper.sellQuickbuy(event,arena, isInflated);
+    }
+
+    @Override
+    public void operate(InventoryDragEvent event) {
+        InventoryOperationHelper.didTryToDragIn(event,this);
+    }
+
+
 }
