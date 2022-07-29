@@ -7,7 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
 
-/**
+/*
  * @author CAMM
  * This enum is used as a template for placing items into section inventories
  */

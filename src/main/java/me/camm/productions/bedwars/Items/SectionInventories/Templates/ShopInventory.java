@@ -106,13 +106,14 @@ public abstract class ShopInventory extends CraftInventoryCustom implements ISec
         BattlePlayer battlePlayer = arena.getPlayers().getOrDefault(player.getUniqueId(), null);
         if (battlePlayer == null)
         {
+
             return;
         }
 
         InventoryOperationHelper.handleDefaultRestrictions(event, arena);
 
         boolean cancel = InventoryOperationHelper.handleClickAttempt(event, this);
-       event.setCancelled(cancel);
+           event.setCancelled(cancel);
 
         //if the player's inventory is the clicked inv
         if (playerInv.equals(clicked))
@@ -127,7 +128,11 @@ public abstract class ShopInventory extends CraftInventoryCustom implements ISec
 
     @Override
     public void operate(InventoryDragEvent event) {
-        InventoryOperationHelper.didTryToDragIn(event,this);
+
+        if (InventoryOperationHelper.didTryToDragIn(event,this))
+            event.setCancelled(true);
+        else
+            InventoryOperationHelper.handleDefaultRestrictions(event,arena);
     }
 
 

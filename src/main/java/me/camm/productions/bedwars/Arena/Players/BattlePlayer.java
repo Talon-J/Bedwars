@@ -7,6 +7,7 @@ import me.camm.productions.bedwars.Arena.Players.Scoreboards.PlayerBoard;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Arena.Teams.TeamTitle;
+import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyEditorInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Listeners.PacketHandler;
@@ -281,9 +282,7 @@ public class BattlePlayer
         this.shopManager = reader.readInvFile();
 
 
-        Arrays.stream(shopManager.getShopInventories()).forEach(inv -> {
-            accessibleInventories.put(inv.hashCode(), inv);
-        });
+        Arrays.stream(shopManager.getShopInventories()).forEach(inv -> accessibleInventories.put(inv.hashCode(), inv));
 
          quickEditor = new QuickBuyEditorInventory(this);
 
@@ -687,11 +686,15 @@ public class BattlePlayer
             barManager.set(ItemHelper.toSoldItem(axe.getItem(), this), getAxe().getItem(), player);
         }
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
+
         heal();
         equipArmor();
 
         sendTitle(TeamTitle.RESPAWNED.getMessage(), null,2,40,10);
         team.applyPlayerModifiersToPlayer(this);
+
+
     }
 
 
@@ -720,6 +723,7 @@ public class BattlePlayer
         heal();
         equipArmor();
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
     }
 
 
@@ -990,7 +994,7 @@ public class BattlePlayer
 
     public void printStatistics(){
         player.sendMessage("=== Statistics ===");
-        player.sendMessage("Team:"+teamImprint.getName());
+        player.sendMessage("Played for Team:"+teamImprint.getName());
         player.sendMessage("Kills:"+kills);
         player.sendMessage("Finals:"+finals);
         player.sendMessage("Beds broken:"+beds);

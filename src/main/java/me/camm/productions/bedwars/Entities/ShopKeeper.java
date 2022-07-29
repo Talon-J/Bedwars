@@ -166,6 +166,9 @@ public class ShopKeeper
         new BukkitRunnable() {
             public void run() {
                 shopType.remove();
+
+                for (Player player: Bukkit.getOnlinePlayers())
+                    unloadNPC(player);
             }
         }.runTask(plugin);
     }

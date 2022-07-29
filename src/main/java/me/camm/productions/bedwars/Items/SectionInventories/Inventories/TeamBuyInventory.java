@@ -98,6 +98,12 @@ public class TeamBuyInventory extends CraftInventoryCustom implements IGameInven
 
     @Override
     public void operate(InventoryDragEvent event) {
+
+        if (InventoryOperationHelper.didTryToDragIn(event, this)) {
+            event.setCancelled(true);
+
+            return;
+        }
         InventoryOperationHelper.handleDefaultRestrictions(event, arena);
     }
 

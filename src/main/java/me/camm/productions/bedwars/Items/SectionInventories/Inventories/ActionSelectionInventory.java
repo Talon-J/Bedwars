@@ -27,7 +27,7 @@ public class ActionSelectionInventory extends CraftInventoryCustom implements IG
     private final Arena arena;
 
     public ActionSelectionInventory(Arena arena) {
-        super(null, InventoryProperty.SMALL_SHOP_SIZE.getValue(), InventoryName.TRACKER.getTitle());
+        super(null, InventoryProperty.SMALL_SHOP_SIZE.getValue(), InventoryName.TRACKER_COMMS.getTitle());
         this.arena = arena;
         init();
     }

@@ -58,7 +58,7 @@ public class InventoryListener implements Listener {
         if (event instanceof InventoryCreativeEvent)
             return;
 
-        if (event.getClickedInventory() == null || event.getClickedInventory().getTitle() == null) {
+        if (event.getClickedInventory() == null) {
             return;
         }
 
@@ -71,33 +71,24 @@ public class InventoryListener implements Listener {
             return;
         }
 
+
+        if (!runner.isRunning())
+            return;
+
         Map<Integer, IGameInventory> monitors = battlePlayer.getAccessibleInventories();
 
         Inventory clicked = event.getClickedInventory();
-        Inventory top = event.getView().getTopInventory();
-
-        if (!clicked.equals(top) && runner.isRunning()) {
-            InventoryOperationHelper.handleDefaultRestrictions(event, arena);
-            return;
-        }
-
         IGameInventory gameInventory = monitors.getOrDefault(clicked.hashCode(), null);
 
-
         if (gameInventory == null) {
-            System.out.println("g inv is null");
-            return;
+         InventoryOperationHelper.handleDefaultRestrictions(event, arena);
         }
-
-        gameInventory.operate(event);
+        else
+         gameInventory.operate(event);
 
 
         /////////////////////
 
-
-
-
-        //maybe use a switch statement here for the titles
 
     }//method
 
@@ -113,39 +104,26 @@ public class InventoryListener implements Listener {
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event)
     {
-        if (InventoryOperationHelper.didTryToDragIn(event, (Inventory)joinInventory)) {
-            event.setCancelled(true);
-        }
+        UUID id = event.getWhoClicked().getUniqueId();
 
-        HumanEntity entity = event.getWhoClicked();
-        if (!registeredPlayers.containsKey(entity.getUniqueId()))
-            return;
+        BattlePlayer battlePlayer = registeredPlayers.getOrDefault(id, null);
+        if (battlePlayer == null) {
 
-        BattlePlayer player = registeredPlayers.get(entity.getUniqueId());
-        Inventory inv = event.getInventory();
-
-        Inventory section = player.getShopManager().isSectionInventory(inv);
-
-        if (InventoryOperationHelper.didTryToDragIn(event, section)) {
-            event.setCancelled(true);
+            if (InventoryOperationHelper.didTryToDragIn(event, (Inventory)joinInventory)) {
+                event.setCancelled(true);
+            }
             return;
         }
 
-        if (InventoryOperationHelper.didTryToDragIn(event, (Inventory)player.getTeam().getTeamInventory())) {
-            event.setCancelled(true);
+
+        Map<Integer, IGameInventory> inventories = battlePlayer.getAccessibleInventories();
+
+        IGameInventory dragged = inventories.getOrDefault(event.getInventory().hashCode(), null);
+
+        if (dragged == null)
             return;
-        }
 
-        if (InventoryOperationHelper.didTryToDragIn(event, player.getQuickEditor())) {
-            event.setCancelled(true);
-            return;
-        }
-
-        InventoryOperationHelper.handleDefaultRestrictions(event,arena);
-
-        if (player.getBarManager().invEquals(event.getView().getTopInventory()))
-            InventoryOperationHelper.operateHotBarDrag(event, arena);
-
+        dragged.operate(event);
     }
 
 

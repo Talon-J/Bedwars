@@ -78,6 +78,7 @@ public class InventoryOperationHelper
                 !event.getView().getBottomInventory().equals(restrictedInv) &&
                 !clickedInventory.equals(restrictedInv)) {
 
+            System.out.println("c1");
             return false;
         }
 
@@ -86,11 +87,8 @@ public class InventoryOperationHelper
 
         //if the player tried to shift click something into the inventory
         // (Either from the player inv -> shop,  or shop -> player inv)
-        if (event.isShiftClick() &&
-
-                (topInventory.equals(restrictedInv) ||
-                        playerInventory.equals(restrictedInv))) {
-
+        if (event.isShiftClick() && (topInventory.equals(restrictedInv) || playerInventory.equals(restrictedInv))) {
+            System.out.println("c2");
             return true;
         }
 
@@ -99,10 +97,13 @@ public class InventoryOperationHelper
                 !( name.contains(Values.COLLECT.name()) ||
                         name.contains(Values.MOVE.name()) ||
                         name.contains(Values.SWAP.name()))) {
+
+            System.out.println("c3");
             return false;
         }
 
 
+        System.out.println("c4");
         return name.contains(Values.HOTBAR.name()) ||
                 name.contains(Values.PLACE.name()) ||
                 name.contains(Values.MOVE.name()) ||
@@ -543,15 +544,15 @@ public class InventoryOperationHelper
 
          if (cursor == null || cursor.getType()==Material.AIR)
          {
-             System.out.println("cursor null");
+
              if (HotbarManager.slotInRangeTake(slot))
              {
-                 System.out.println("operate take");
+
                  operateBarItemTake(clickedInv, slot, arena.getPlugin());
              }
              else if (HotbarManager.slotInRangePlace(slot))
              {
-                 System.out.println("updating layout");
+
                  clickedInv.setItem(slot, null);
                 boolean result = manager.updateLayout(slot,null);
 
@@ -559,7 +560,7 @@ public class InventoryOperationHelper
                      clicked.sendMessage(ChatColor.RED+"[ERROR] Unable to update your layout!");
              }
              else {
-                 System.out.println("check rtn /rst");
+
                  checkReturnReset(clicked, slot);
                  event.setCancelled(true);
              }

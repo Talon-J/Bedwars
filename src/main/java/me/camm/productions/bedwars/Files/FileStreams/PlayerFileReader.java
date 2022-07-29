@@ -21,7 +21,7 @@ import static me.camm.productions.bedwars.Util.Helpers.StringHelper.*;
 
 
 
-/**
+/*
  * @author CAMM
  * Reader to read the info from the player config files
  */

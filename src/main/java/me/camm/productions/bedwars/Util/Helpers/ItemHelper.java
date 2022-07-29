@@ -605,6 +605,10 @@ public class ItemHelper
 
     }
 
+    public static ItemStack createWool(byte color) {
+            return new ItemStack(Material.WOOL, 1, color);
+    }
+
 
 
     //creates a glass pane depending on category. returns null otherwise.
@@ -881,6 +885,27 @@ public class ItemHelper
         item.setItemMeta(meta);
         return item;
     }
+
+
+    public static void addLore(ItemStack item, String lore) {
+
+        if (isItemInvalid(item))
+            return;
+
+        if (lore == null)
+            return;
+
+        ItemMeta meta = item.getItemMeta();
+        List<String> loreList = meta.getLore();
+
+        if (loreList == null)
+            loreList = new ArrayList<>();
+
+        loreList.add(lore);
+        meta.setLore(loreList);
+        item.setItemMeta(meta);
+
+          }
 
 
     /*
@@ -1342,7 +1367,7 @@ public class ItemHelper
             {
                 if (isItemInvalid(player.getInventory().getItem(slot)))
                     continue;
-                    ItemStack currentItem = player.getInventory().getItem(slot);
+                ItemStack currentItem = player.getInventory().getItem(slot);
                 if (!currentItem.isSimilar(PRICE_ITEM))
                  continue;
 

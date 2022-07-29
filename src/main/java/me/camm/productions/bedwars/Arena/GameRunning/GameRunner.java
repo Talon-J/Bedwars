@@ -3,9 +3,10 @@ package me.camm.productions.bedwars.Arena.GameRunning;
 import me.camm.productions.bedwars.Arena.GameRunning.Events.ActionEvent;
 import me.camm.productions.bedwars.Arena.GameRunning.Events.GameEndAction;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
+import me.camm.productions.bedwars.Arena.Players.Managers.PlayerTrackerManager;
 import me.camm.productions.bedwars.Arena.Players.Scoreboards.PlayerBoard;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TrackerSectionInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamOptionInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Listeners.PacketHandler;
 import me.camm.productions.bedwars.Entities.ShopKeeper;
@@ -62,7 +63,6 @@ public class GameRunner
 
     /*
     These are the classes with the listeners.
-    todo We need to unregister them after the game is done (see endGame() method)
      */
     private BlockInteractListener blockListener;
     private ItemUseListener itemListener;
@@ -73,10 +73,13 @@ public class GameRunner
     private EntityActionListener damageListener;
     private LogListener playerLogListener;
     private ProjectileListener projectileListener;
-    private ExecutableBoundaryLoader boundaryLoader;
-    private InventoryListener invListener;
-    private Listener[] handlers;
 
+
+    private InventoryListener invListener;
+
+
+    private ExecutableBoundaryLoader boundaryLoader;
+    private PlayerTrackerManager trackerManager;
 
 
 
@@ -168,7 +171,10 @@ public class GameRunner
         boundaryLoader = new ExecutableBoundaryLoader(arena);
         boundaryLoader.start();
 
-        //init the npcs for buying, etc
+        trackerManager = new PlayerTrackerManager();
+        trackerManager.start();
+
+        //        //init the npcs for buying, etc
         for (BattleTeam team: arena.getTeams().values()) {
             maxPlayers = Math.max(maxPlayers, team.getPlayers().size());
             team.initializeNPCs();
@@ -183,7 +189,10 @@ public class GameRunner
             //if there are no players on there, then eliminate the team.
             if (team.getRemainingPlayers()==0) {
                 team.eliminate();
+                continue;
             }
+
+            team.setTrackerManager(trackerManager);
         }
 
 
@@ -191,7 +200,7 @@ public class GameRunner
         if (maxPlayers>2)
             isInflated = true;
 
-        TrackerSectionInventory.setInflated(isInflated);
+        TeamOptionInventory.setInflated(isInflated);
 
         //adding the packet handler for the invisibility, etc
         this.packetHandler = new PacketHandler(keepers, arena);
@@ -232,7 +241,7 @@ public class GameRunner
 
 
         PluginManager manager = plugin.getServer().getPluginManager();
-        handlers = new Listener[]{droppedListener,mobSpawnListener,damageListener,blockListener,explosionListener,itemListener,projectileListener};
+        Listener[] handlers = new Listener[]{droppedListener, mobSpawnListener, damageListener, blockListener, explosionListener, itemListener, projectileListener};
         for (Listener listener: handlers) {
             manager.registerEvents(listener, plugin);
         }
@@ -513,16 +522,19 @@ as a string.
             }
         }
 
-        //Revealing all possible hidden players to other players.
+        HandlerList.unregisterAll(plugin);
+        arena.unregisterMap();
+
         for (BattlePlayer player: arena.getPlayers().values())
         {
 
             player.teleport(arena.getSpecSpawn());
-           Player raw = player.getRawPlayer();
+            Player raw = player.getRawPlayer();
             raw.setAllowFlight(true);
-           raw.setFlying(true);
-           packetHandler.removePlayer(raw);
-           player.removeInvisibilityEffect();
+            raw.setFlying(true);
+            packetHandler.removePlayer(raw);
+            player.removeInvisibilityEffect();
+            player.printStatistics();
 
 
 
@@ -530,9 +542,6 @@ as a string.
                 player.getRawPlayer().showPlayer(possiblyHidden);
             }
         }
-
-        HandlerList.unregisterAll(plugin);
-        arena.unregisterMap();
 
 
     }

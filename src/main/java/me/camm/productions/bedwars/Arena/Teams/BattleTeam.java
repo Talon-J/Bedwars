@@ -9,7 +9,8 @@ import me.camm.productions.bedwars.Generators.Forge;
 import me.camm.productions.bedwars.Items.ItemDatabases.BattleEnchantment;
 import me.camm.productions.bedwars.Items.ItemDatabases.TeamItem;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamBuyInventory;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TrackerSectionInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamOptionInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TrackerInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamInventoryConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
@@ -61,7 +62,7 @@ public class BattleTeam
     private ExecutableBoundaryLoader loader;
    // private boolean auraActive;
     private final ChatSender sender;
-    private TrackerSectionInventory trackerInventory;
+    private final TeamOptionInventory trackerInventory;
 
 
     //////////////////////////////////////////////////////////////////
@@ -142,7 +143,7 @@ public class BattleTeam
         this.teamPrefix = teamColor.getChatColor()+"["+teamColor.getSymbol()+"]";
         this.traps = new ITrap[3];
         this.teamInventory = new TeamBuyInventory(arena);
-        trackerInventory = new TrackerSectionInventory(arena);
+        trackerInventory = new TrackerInventory(arena);
 
 
         this.upgrades = new ConcurrentHashMap<>();
@@ -194,6 +195,7 @@ public class BattleTeam
     //initializes the tracking entries with the collection of teams
     public void initTrackingEntries(Collection<BattleTeam> teams){
         trackerInventory.addEntries(teams, this);
+        trackerInventory.updateInventory();
     }
 
 
@@ -300,6 +302,11 @@ public class BattleTeam
         bed.unregister(BED.getData(), arena.getWorld(), arena.getPlugin());
         sender.sendMessage(ChatColor.WHITE + "" + ChatColor.BOLD + "TEAM ELIMINATED >> " + ChatColor.RESET + teamColor.getChatColor() + getCapitalizedColor() + " Team" + ChatColor.RED + " has been eliminated!");
         players.values().forEach(player ->player.setEliminated(true));
+
+        for (BattleTeam team: arena.getTeams().values()) {
+            if (!team.equals(this))
+                team.removeAndUpdateTracker(this);
+        }
 
     }
 
@@ -498,12 +505,12 @@ It is up to the calling method to update the scoreboards of the players.
     }
 
 
-    public TrackerSectionInventory getTrackerInventory(){
+    public TeamOptionInventory getTrackerInventory(){
         return trackerInventory;
     }
 
     public void setTrackerManager(PlayerTrackerManager manager) {
-        trackerInventory.setManager(manager);
+        ((TrackerInventory)trackerInventory).setManager(manager);
     }
 
 

@@ -1,11 +1,12 @@
 package me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
 public enum ActionSelectionConfig {
 
-    TRACKER(11, Material.COMPASS, "Tracker"),
-    CHAT(15, Material.FEATHER, "Quick Chat");
+    TRACKER(15, Material.COMPASS, ChatColor.WHITE+"Tracker"),
+    CHAT(11, Material.FEATHER, ChatColor.WHITE+"Quick Chat");
 
     private int slot;
     private Material mat;

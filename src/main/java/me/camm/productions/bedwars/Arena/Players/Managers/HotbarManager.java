@@ -6,7 +6,6 @@ import me.camm.productions.bedwars.Items.ItemDatabases.*;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.HotbarEditorInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.HotBarConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
-import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
@@ -25,7 +24,7 @@ import static me.camm.productions.bedwars.Items.SectionInventories.Templates.Inv
 import static me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory.*;
 
 
-/**
+/*
  * @author CAMM
  * The hotbar manager manages the placement of bought items into the player's inventory, EXCLUDING armor.
  */
@@ -44,7 +43,7 @@ public class HotbarManager
 
 
         initInventory();
-        addCategory(ItemCategory.MELEE,0);
+        defaultConfig();
         updateDisplay();
     }
 
@@ -57,7 +56,7 @@ public class HotbarManager
         editor = new HotbarEditorInventory(arena);
         if ((layout==null)||(layout.length!= HOT_BAR_END.getValue())) {
             this.layout = new ItemCategory[HOT_BAR_END.getValue()];
-            addCategory(ItemCategory.MELEE,0);
+            defaultConfig();
         }
         else {
             this.layout = layout;
@@ -72,12 +71,17 @@ public class HotbarManager
             }
 
             if (empty)
-                addCategory(MELEE,0);
+                defaultConfig();
         }
 
 
         initInventory();
         updateDisplay();
+    }
+
+    private void defaultConfig(){
+        addCategory(ItemCategory.MELEE,0);
+        addCategory(TRACKER, 8);
     }
 
 

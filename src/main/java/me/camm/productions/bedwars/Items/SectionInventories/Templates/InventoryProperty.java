@@ -56,6 +56,7 @@ public enum InventoryProperty
 
     MEDIUM_SHOP_SIZE(36),
     SMALL_SHOP_SIZE(27),
+    LARGE_SHOP_SIZE(45),
     SMALL_CRAFTING_GRID(4),
     SHOP_SIZE(54);
 

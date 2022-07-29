@@ -9,7 +9,6 @@ import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryCustom;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 
 public class HotbarEditorInventory extends CraftInventoryCustom implements IGameInventory {
 
@@ -32,6 +31,13 @@ public class HotbarEditorInventory extends CraftInventoryCustom implements IGame
     @Override
     public void operate(InventoryDragEvent event) {
 
-        InventoryOperationHelper.didTryToDragIn(event, this);
+
+        if (InventoryOperationHelper.didTryToDragIn(event, this)) {
+            event.setCancelled(true);
+
+            return;
+        }
+        InventoryOperationHelper.handleDefaultRestrictions(event, arena);
+
     }
 }
