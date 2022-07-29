@@ -34,20 +34,19 @@ public class InventoryListener implements Listener {
     private final ChatSender sender;
 
 
-
-    public InventoryListener(GameRunner runner){
+    public InventoryListener(GameRunner runner) {
         sender = ChatSender.getInstance();
         this.arena = runner.getArena();
         this.runner = runner;
         registeredPlayers = arena.getPlayers();
         titles = new HashMap<>();
         InventoryName[] names = InventoryName.values();
-        for (InventoryName name: names)
-            titles.put(name.getTitle(),name);
+        for (InventoryName name : names)
+            titles.put(name.getTitle(), name);
         this.joinInventory = new TeamJoinInventory(arena, runner);
     }
 
-    public IGameInventory getJoinInventory(){
+    public IGameInventory getJoinInventory() {
         return joinInventory;
     }
 
@@ -59,7 +58,7 @@ public class InventoryListener implements Listener {
         if (event instanceof InventoryCreativeEvent)
             return;
 
-        if (event.getClickedInventory()==null||event.getClickedInventory().getTitle()==null) {
+        if (event.getClickedInventory() == null || event.getClickedInventory().getTitle() == null) {
             return;
         }
 
@@ -67,8 +66,7 @@ public class InventoryListener implements Listener {
         BattlePlayer battlePlayer = registeredPlayers.getOrDefault(player.getUniqueId(), null);
         Inventory inv = event.getClickedInventory();
 
-        if (battlePlayer == null || inv.equals(joinInventory))
-        {
+        if (battlePlayer == null || inv.equals(joinInventory)) {
             joinInventory.operate(event);
             return;
         }
@@ -83,120 +81,21 @@ public class InventoryListener implements Listener {
             return;
         }
 
-        IGameInventory gameInventory = monitors.getOrDefault(clicked.hashCode(),null);
+        IGameInventory gameInventory = monitors.getOrDefault(clicked.hashCode(), null);
 
 
-        if (gameInventory == null)
+        if (gameInventory == null) {
+            System.out.println("g inv is null");
             return;
+        }
 
         gameInventory.operate(event);
 
 
-
-        boolean debug = true;
-        if (debug)
-            return;
-
         /////////////////////
 
-        //If the clicked inventory is not registered as a known inventory
-        if (!titles.containsKey(""))
-        {
-
-            if (!registeredPlayers.containsKey(player.getUniqueId()))
-                return;
 
 
-
-            //operate on restrictions to ensure that they didn't put a restricted item somewhere
-            InventoryOperationHelper.handleDefaultRestrictions(event, arena);
-
-            //if the player's inventory is not the clicked inventory, then return.
-            if (!player.getInventory().equals(event.getClickedInventory()))
-                return;
-
-            //if the enderchest is the clicked inv, then return.
-            if (player.getEnderChest().equals(event.getClickedInventory()))
-                return;
-
-            //If the player has clicked their own inv or their enderchest inv.
-
-            ItemStack stack = event.getCurrentItem();
-            if (ItemHelper.isItemInvalid(stack))
-                return;
-
-            //If the player has attempted to take off their armor, cancel the event.
-            //So it seems that there is a glitch with players being
-            //able to take it off in creative.
-            //Shouldn't be an issue though, since everyone should be
-            //in survival.
-            if (ItemHelper.isArmor(stack.getType()))
-            {
-                GameMode mode = player.getGameMode();
-                if (mode != GameMode.CREATIVE && mode != GameMode.SPECTATOR) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-
-
-            //if it is a top inv
-            Inventory topInventory = event.getInventory();
-
-            boolean valid = false;
-            if (joinInventory.equals(topInventory)){
-                event.setCancelled(true);
-                valid = true;
-            }
-
-
-            PlayerInventoryManager sectionManager = battlePlayer.getShopManager();
-            if (sectionManager == null)
-                return;
-
-            Inventory sectionInv = sectionManager.isSectionInventory(topInventory);
-
-            if (sectionInv == null && !valid)
-                return;
-
-            if (InventoryOperationHelper.handleClickAttempt(event,sectionInv)) {
-                event.setCancelled(true);
-                return;
-            }
-
-
-        }
-
-        InventoryName inventoryName = titles.get("");
-        if (inventoryName == null)
-            return;
-
-        if (inventoryName == InventoryName.TEAM_JOIN) {
-             //   addPlayerToTeam(event);
-        }
-        else {
-            switch (inventoryName) {
-
-                case TEAM_BUY:
-                    InventoryOperationHelper.sellTeamBuy(event, arena);
-                    break;
-
-                case EDIT_QUICKBUY:
-                    InventoryOperationHelper.operateInventoryEdit(event, arena);
-                    break;
-
-                case HOTBAR_MANAGER:
-                    InventoryOperationHelper.operateHotBarClick(event, arena);
-                    break;
-
-                case TRACKER:
-                    break;
-
-                default:
-                    InventoryOperationHelper.sellQuickbuy(event, arena, runner.isInflated());
-                    //do the rest of the invs here.
-            }
-        }
 
         //maybe use a switch statement here for the titles
 

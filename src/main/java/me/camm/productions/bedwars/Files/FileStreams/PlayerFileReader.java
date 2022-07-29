@@ -95,12 +95,12 @@ public class PlayerFileReader
                    currentSlot++;
                }
             }
-            manager = new HotbarManager(set);
+            manager = new HotbarManager(set,arena);
             return manager;
         }
         catch (IOException e)
         {
-            manager = new HotbarManager();
+            manager = new HotbarManager(arena);
             return manager;
         }
     }

@@ -1,5 +1,6 @@
 package me.camm.productions.bedwars.Arena.Players.Managers;
 
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Items.ItemDatabases.*;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.HotbarEditorInventory;
@@ -33,11 +34,13 @@ public class HotbarManager
     private final ItemCategory[] layout;
     private final IGameInventory editor;
 
+
     //creating a manager with no layout from a saved file
-    public HotbarManager()
+    public HotbarManager(Arena arena)
     {
         this.layout = new ItemCategory[HOT_BAR_END.getValue()];
-         editor = new HotbarEditorInventory(null, InventoryProperty.SHOP_SIZE.getValue(), InventoryName.HOTBAR_MANAGER.getTitle());
+         editor = new HotbarEditorInventory(arena);
+
 
 
         initInventory();
@@ -48,10 +51,10 @@ public class HotbarManager
 
 
     //creating a manager with a layout from a saved file
-    public HotbarManager(ItemCategory[] layout)
+    public HotbarManager(ItemCategory[] layout, Arena arena)
     {
 
-        editor = new HotbarEditorInventory(null, InventoryProperty.SHOP_SIZE.getValue(), InventoryName.HOTBAR_MANAGER.getTitle());
+        editor = new HotbarEditorInventory(arena);
         if ((layout==null)||(layout.length!= HOT_BAR_END.getValue())) {
             this.layout = new ItemCategory[HOT_BAR_END.getValue()];
             addCategory(ItemCategory.MELEE,0);

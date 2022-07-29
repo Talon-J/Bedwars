@@ -539,22 +539,19 @@ public class InventoryOperationHelper
 
         int slot = event.getSlot();
 
-        if (!manager.invEquals(clickedInv)) {
-            event.setCancelled(true);
-            return;
-        }
-
-       // ItemStack residing = clickedInv.getItem(slot);
         ItemStack cursor = event.getCursor();
 
          if (cursor == null || cursor.getType()==Material.AIR)
          {
+             System.out.println("cursor null");
              if (HotbarManager.slotInRangeTake(slot))
              {
+                 System.out.println("operate take");
                  operateBarItemTake(clickedInv, slot, arena.getPlugin());
              }
              else if (HotbarManager.slotInRangePlace(slot))
              {
+                 System.out.println("updating layout");
                  clickedInv.setItem(slot, null);
                 boolean result = manager.updateLayout(slot,null);
 
@@ -562,6 +559,7 @@ public class InventoryOperationHelper
                      clicked.sendMessage(ChatColor.RED+"[ERROR] Unable to update your layout!");
              }
              else {
+                 System.out.println("check rtn /rst");
                  checkReturnReset(clicked, slot);
                  event.setCancelled(true);
              }
@@ -695,6 +693,7 @@ public class InventoryOperationHelper
      */
     public static void operateInventoryEdit(InventoryClickEvent event, Arena arena){
 
+        System.out.println("edit");
         BattlePlayer player = arena.getPlayers().getOrDefault(event.getWhoClicked().getUniqueId(),null);
         if (player == null)
             return;

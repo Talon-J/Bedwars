@@ -3,14 +3,12 @@ package me.camm.productions.bedwars.Items.SectionInventories.Inventories;
 
 import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
-import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
+import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.ActionSelectionConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryCustom;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -26,23 +24,6 @@ import java.util.UUID;
  */
 public class ActionSelectionInventory extends CraftInventoryCustom implements IGameInventory {
 
-    private final static ItemStack TRACKER_OPTION = ItemHelper.toBarItem(ItemCategory.TRACKER);
-    private final static ItemStack CHAT_OPTION = ItemHelper.toSimpleItem(Material.FEATHER, ChatColor.AQUA+"Quick Chat");
-
-    private static enum Slot{
-        TRACKER(11, TRACKER_OPTION),
-        CHAT(15,CHAT_OPTION);
-
-        public final int slot;
-        public final ItemStack stack;
-
-        Slot(int slot, ItemStack stack){
-            this.slot = slot;
-            this.stack = stack;
-        }
-    }
-
-
     private final Arena arena;
 
     public ActionSelectionInventory(Arena arena) {
@@ -51,9 +32,12 @@ public class ActionSelectionInventory extends CraftInventoryCustom implements IG
         init();
     }
 
-    private void init(){
-        for (Slot slot: Slot.values())
-            setItem(slot.slot, slot.stack);
+    public void init(){
+        //set items here
+
+        for (ActionSelectionConfig config: ActionSelectionConfig.values()) {
+            setItem(config.getSlot(), ItemHelper.toSimpleItem(config.getMat(), config.getName()));
+        }
     }
 
     @Override
@@ -72,19 +56,35 @@ public class ActionSelectionInventory extends CraftInventoryCustom implements IG
         if (clicked == null)
             return;
 
+        Player raw = clicked.getRawPlayer();
+
        Inventory tracker = clicked.getTeam().getTrackerInventory();
         Inventory chat = (Inventory)arena.getChatInv();
 
-        ItemStack clickedItem = event.getCurrentItem();
-        if (ItemHelper.isItemInvalid(clickedItem))
+        int slot = event.getSlot();
+
+        ActionSelectionConfig current = null;
+        for (ActionSelectionConfig config: ActionSelectionConfig.values()) {
+            if (config.getSlot() == slot) {
+                current = config;
+                break;
+            }
+        }
+
+        if (current == null)
             return;
 
-        Player player = clicked.getRawPlayer();
+        switch (current) {
+            case CHAT:
+                raw.openInventory(chat);
+                break;
+            case TRACKER:
+                raw.openInventory(tracker);
 
-        if (clickedItem.isSimilar(TRACKER_OPTION))
-            player.openInventory(tracker);
-            else if (clickedItem.isSimilar(CHAT_OPTION))
-                player.openInventory(chat);
+        }
+
+
+
     }
 
     @Override
