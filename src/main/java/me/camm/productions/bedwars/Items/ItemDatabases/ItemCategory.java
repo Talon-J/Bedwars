@@ -2,14 +2,15 @@ package me.camm.productions.bedwars.Items.ItemDatabases;
 
 import org.bukkit.ChatColor;
 
-/**
+/*
  * @author CAMM
  * This enum is used for keeping track of item categories in the game
  *
  */
 public enum ItemCategory
 {
-    BLOCK(ChatColor.AQUA+"Blocks Section",ShopItem.BLOCKS_NAV),
+    NONE(ChatColor.AQUA+"Empty Slot", ShopItem.EMPTY_SLOT),
+    BLOCK(ChatColor.AQUA+"Blocks Section", ShopItem.BLOCKS_NAV),
     MELEE(ChatColor.AQUA+"Melee Section", ShopItem.MELEE_NAV),
     ARMOR(ChatColor.AQUA+"Armor Section",ShopItem.ARMOR_NAV),
     TOOLS(ChatColor.AQUA+"Tools Section",ShopItem.TOOLS_NAV),
@@ -19,8 +20,7 @@ public enum ItemCategory
     NAV(ChatColor.GOLD+"Navigation",null),
     OPERATOR(ChatColor.GOLD+"Operator",null),
     TRACKER("Tracker",ShopItem.TRACKER_NAV),
-    SEPARATOR(ChatColor.GRAY+"Separator",null),
-    NONE(ChatColor.AQUA+"Empty Slot",null);
+    SEPARATOR(ChatColor.GRAY+"Separator",null);
 
     public final String type;
     public final ShopItem associate;

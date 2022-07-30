@@ -242,6 +242,19 @@ public class GameBoundary extends Boundary<Integer>
        sendRegistry(type);
     }
 
+    public void unregister(World world, String type, Plugin plugin) {
+        for (int x = x1; x <= x2; x++) {
+            for (int y = y1; y <= y2; y++) {
+                for (int z = z1; z <= z2; z++) {
+                    Block block = world.getBlockAt(x, y, z);
+                    block.removeMetadata(type, plugin);
+                }
+            }
+        }
+        sendUnregistry(type);
+
+    }
+
     //Checking if the boundary contains a coordinate
     public boolean containsCoordinate(int x, int y, int z)
     {
@@ -251,6 +264,11 @@ public class GameBoundary extends Boundary<Integer>
     private void sendRegistry(String type)
     {
         sender.sendMessage(ChatColor.YELLOW + "[MAP REGISTER] Registered Zone from (x1=" + x1 + ",y1=" + y1 + ",z1=" + z1 + ") to (x2=" + x2 + ",y2=" + y2 + ",z2=" + z2 + ") with " + type);
+    }
+
+
+    private void sendUnregistry(String type) {
+        sender.sendMessage(ChatColor.YELLOW + "[MAP REGISTER] Unregistered Zone from (x1=" + x1 + ",y1=" + y1 + ",z1=" + z1 + ") to (x2=" + x2 + ",y2=" + y2 + ",z2=" + z2 + ") from " + type);
     }
 
     public Integer[] getValues() {

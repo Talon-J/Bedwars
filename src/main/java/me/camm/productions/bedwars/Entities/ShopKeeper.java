@@ -2,6 +2,7 @@ package me.camm.productions.bedwars.Entities;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Util.Sites;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Chunk;
@@ -148,7 +149,7 @@ public class ShopKeeper
     public void sendNPCToAll()
     {
         for (Player player: Bukkit.getOnlinePlayers())
-        sendNPC(player);
+            sendNPC(player);
     }
 
     public Location getLocation()
@@ -156,9 +157,20 @@ public class ShopKeeper
         return spawnLocation;
     }
 
-    public void removeNPC(Player player)
+    public void unloadNPC(Player player)
     {
         sendPacket(player, new PacketPlayOutEntityDestroy(npc.getId()));
+    }
+
+    public void removeNPC() {
+        new BukkitRunnable() {
+            public void run() {
+                shopType.remove();
+
+                for (Player player: Bukkit.getOnlinePlayers())
+                    unloadNPC(player);
+            }
+        }.runTask(plugin);
     }
 
     public void sendNPC(Player player)

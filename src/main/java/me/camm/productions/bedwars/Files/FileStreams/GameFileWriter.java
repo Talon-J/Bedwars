@@ -1,11 +1,11 @@
 package me.camm.productions.bedwars.Files.FileStreams;
 
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
-import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -65,7 +65,7 @@ public class GameFileWriter {
     /*
       method to write entire sections of info
      */
-    public void writeSection(ArrayList<String[]> values)  //arraylist of string arrays.
+    public void writeSection(List<String[]> values)  //arraylist of string arrays.
     {
         try
         {
@@ -86,11 +86,11 @@ public class GameFileWriter {
         catch (FileNotFoundException e)
         {
 
-            sender.sendPlayerMessage("Could not find file "+file.getName(), ChatSender.GameState.ERROR);
+            sender.broadcastMessage("Could not find file "+file.getName(), ChatSender.GameState.ERROR);
         }
         catch (Exception e)
         {
-            sender.sendPlayerMessage("Exception occurred while trying to write to "+file.getName(), ChatSender.GameState.ERROR);
+            sender.broadcastMessage("Exception occurred while trying to write to "+file.getName(), ChatSender.GameState.ERROR);
         }
     }
 }

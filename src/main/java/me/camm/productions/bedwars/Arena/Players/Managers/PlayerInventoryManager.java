@@ -1,9 +1,10 @@
 package me.camm.productions.bedwars.Arena.Players.Managers;
 
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.*;
-import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventorySetter;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventory;
 import me.camm.productions.bedwars.Util.DataSets.ShopItemSet;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import org.bukkit.inventory.Inventory;
@@ -18,15 +19,16 @@ inventories.
  */
 public class PlayerInventoryManager
 {
-    private final boolean isInflated;
+    private boolean isInflated;
     private BattlePlayer owner;
+    private Arena arena;
 
 
 
     //These inventories change for each player.
-    private final ArmorSectionInventory armorSection;
-    private final QuickBuySection quickBuy;
-    private final ToolsSectionInventory toolsSection;
+    private ArmorSectionInventory armorSection;
+    private  QuickBuyInventory quickBuy;
+    private  ToolsSectionInventory toolsSection;
 
     //These inventories are universal for every player and thus don't need to be changed.
     //find a way (if possible) to do this.
@@ -36,53 +38,69 @@ public class PlayerInventoryManager
     private static RangedSectionInventory rangedSection;
     private static UtilitySectionInventory utilitySection;
 
-    private final List<ShopInventorySetter> inventories;
+    private ShopInventory[] values;
 
 
-    public PlayerInventoryManager(boolean isInflated)
+
+
+    public PlayerInventoryManager(boolean isInflated, Arena arena, BattlePlayer owner)
     {
-       this(null,isInflated);
+       this(null,isInflated, arena,owner);
     }
 
-    public void setOwner(BattlePlayer player)
-    {
-        this.owner = player;
-    }
-
-    public PlayerInventoryManager(ArrayList<ShopItemSet> quickBuyConfiguration, boolean isInflated)
+    public PlayerInventoryManager(ArrayList<ShopItemSet> quickBuyConfiguration, boolean isInflated, Arena arena, BattlePlayer owner)
     {
 
-        armorSection = new ArmorSectionInventory(isInflated);
-        quickBuy = new QuickBuySection(isInflated,quickBuyConfiguration);
-        toolsSection = new ToolsSectionInventory(isInflated);
+        this.arena = arena;
 
-        if (blockSection==null || meleeSection == null || potionSection == null || rangedSection == null || utilitySection == null) {
-            blockSection = new BlockSectionInventory(isInflated);
-            meleeSection = new MeleeSectionInventory(isInflated);
-            potionSection = new PotionSectionInventory(isInflated);
-            rangedSection = new RangedSectionInventory(isInflated);
-            utilitySection = new UtilitySectionInventory(isInflated);
-        }
+        armorSection = new ArmorSectionInventory(isInflated, arena);
+        quickBuy = new QuickBuyInventory(isInflated,quickBuyConfiguration, arena);
+        toolsSection = new ToolsSectionInventory(isInflated, arena);
+
+
+        if (blockSection == null)
+            blockSection = new BlockSectionInventory(isInflated, arena);
+
+        if (meleeSection == null)
+            meleeSection = new MeleeSectionInventory(isInflated, arena);
+
+        if (potionSection == null)
+            potionSection = new PotionSectionInventory(isInflated, arena);
+
+        if (rangedSection == null)
+            rangedSection = new RangedSectionInventory(isInflated, arena);
+
+        if (utilitySection == null)
+            utilitySection = new UtilitySectionInventory(isInflated,arena);
+
+
+        values = new ShopInventory[]{
+                armorSection,
+                quickBuy,
+                toolsSection,
+                blockSection,
+                meleeSection,
+                potionSection,
+                rangedSection,
+                utilitySection};
 
         this.isInflated = isInflated;
-        //note: immutable. Convert to arraylist w/ new ArrayList<>(inventories)
-        inventories = Arrays.asList(armorSection,quickBuy,toolsSection,
-                blockSection,meleeSection,potionSection,rangedSection,utilitySection);
+
 
     }
 
 
+    @Deprecated
     public Inventory isSectionInventory(Inventory inv)
     {
         if (inv == null)
             return null;
 
-        //todo replace this with a set lookup instead of an arraylist iteration
-      for (ShopInventorySetter i: inventories)
-      {
-          if (i.equals(inv))
-              return i;
+      for (ShopInventory inventory: values) {
+          if (inventory.equals(inv))
+              return inventory;
       }
+
       return null;
     }
 
@@ -95,10 +113,14 @@ public class PlayerInventoryManager
         searchAndReplace(toolsSection,toReplace, replacement);
     }
 
+    public ShopInventory[] getShopInventories() {
+        return values;
+    }
+
     /*
-    Searches and replaces all items that match the similarity of the toReplace item with
-    the replacement item
-     */
+        Searches and replaces all items that match the similarity of the toReplace item with
+        the replacement item
+         */
     private void searchAndReplace(Inventory inv, ShopItem toReplace, ShopItem replacement)
     {
         if (owner == null)
@@ -129,7 +151,7 @@ public class PlayerInventoryManager
         return armorSection;
     }
 
-    public QuickBuySection getQuickBuy() {
+    public QuickBuyInventory getQuickBuy() {
         return quickBuy;
     }
 

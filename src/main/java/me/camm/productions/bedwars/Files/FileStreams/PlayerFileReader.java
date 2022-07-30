@@ -1,12 +1,12 @@
 package me.camm.productions.bedwars.Files.FileStreams;
 
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
+import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Players.Managers.HotbarManager;
 import me.camm.productions.bedwars.Arena.Players.Managers.PlayerInventoryManager;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Util.DataSets.ShopItemSet;
-import me.camm.productions.bedwars.Util.Helpers.StringHelper;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.io.BufferedReader;
@@ -16,30 +16,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.HOT_BAR_END;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty.HOT_BAR_END;
+import static me.camm.productions.bedwars.Util.Helpers.StringHelper.*;
 
 
-/**
+
+/*
  * @author CAMM
  * Reader to read the info from the player config files
  */
-public class PlayerFileReader extends StringHelper
+public class PlayerFileReader
 {
     private final Plugin plugin;
     private final boolean isInflated;
 
     private final File inventoryFile;
     private final File barFile;
+    private final Arena arena;
+
+    private BattlePlayer player;
 
 
-    public PlayerFileReader(Plugin plugin, Player player, boolean isInflated)
+    public PlayerFileReader(Plugin plugin, BattlePlayer player, boolean isInflated, Arena arena)
     {
-        super(plugin);
         this.plugin = plugin;
         this.isInflated = isInflated;
+        this.arena = arena;
+        this.player = player;
 
-        this.inventoryFile = new File(getInventoryPath(player));
-        this.barFile = new File(getHotBarPath(player));
+        this.inventoryFile = new File(getInventoryPath(player.getRawPlayer()));
+        this.barFile = new File(getHotBarPath(player.getRawPlayer()));
     }
 
     /*
@@ -89,12 +95,12 @@ public class PlayerFileReader extends StringHelper
                    currentSlot++;
                }
             }
-            manager = new HotbarManager(set);
+            manager = new HotbarManager(set,arena);
             return manager;
         }
         catch (IOException e)
         {
-            manager = new HotbarManager();
+            manager = new HotbarManager(arena);
             return manager;
         }
     }
@@ -158,11 +164,11 @@ public class PlayerFileReader extends StringHelper
                 current = reader.readLine();
             }
 
-            return new PlayerInventoryManager(items, isInflated);
+            return new PlayerInventoryManager(items, isInflated, arena, player);
         }
         catch (IOException e)
         {
-            return new PlayerInventoryManager(isInflated);
+            return new PlayerInventoryManager(isInflated, arena, player);
         }
 
     }

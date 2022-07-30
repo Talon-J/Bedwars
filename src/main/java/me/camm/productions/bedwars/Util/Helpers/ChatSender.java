@@ -34,14 +34,14 @@ public class ChatSender
     }
 
 
-    public void sendPlayerMessage(String message, @Nullable GameState state){
+    public void broadcastMessage(String message, @Nullable GameState state){
 
         state = state == null ? GameState.RUNNING : state;
         server.broadcastMessage(state.getLevel()+message);
     }
 
     public void sendMessage(String message) {
-        sendPlayerMessage(message,null);
+        broadcastMessage(message,null);
     }
 
     public enum GameState {

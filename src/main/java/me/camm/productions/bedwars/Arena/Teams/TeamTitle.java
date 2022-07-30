@@ -2,7 +2,7 @@ package me.camm.productions.bedwars.Arena.Teams;
 
 import org.bukkit.ChatColor;
 
-/**
+/*
  * @author CAMM
  * Represents all of the possible team titles that can be displayed for a team
  */
@@ -15,7 +15,7 @@ public enum TeamTitle
     ALARM("{\"text\":\""+ChatColor.RED+"Alarm!\"}"),
     TRIGGERED("{\"text\":\"Trap Triggered!\",\"color\":\"red\"}"),
 
-    //See playerUtil interface for implementation of RESPAWN_AFTER
+
     RESPAWN_AFTER("{\"text\":\""+ChatColor.RED+"Respawn in "),
     RESPAWNED("{\"text\":\""+ChatColor.GREEN+"Respawned! \"}"),
 

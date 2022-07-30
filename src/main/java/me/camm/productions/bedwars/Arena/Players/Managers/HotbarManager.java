@@ -1,10 +1,16 @@
 package me.camm.productions.bedwars.Arena.Players.Managers;
 
+import me.camm.productions.bedwars.Arena.GameRunning.Arena;
+import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Items.ItemDatabases.*;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.HotbarEditorInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.HotBarConfig;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
+import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 
-import org.bukkit.Bukkit;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -14,40 +20,43 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty.HOT_BAR_END;
+import static me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty.HOT_BAR_END;
 import static me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory.*;
 
 
-/**
+/*
  * @author CAMM
  * The hotbar manager manages the placement of bought items into the player's inventory, EXCLUDING armor.
  */
 public class HotbarManager
 {
     private final ItemCategory[] layout;
-    private final Inventory editor;
+    private final IGameInventory editor;
+
 
     //creating a manager with no layout from a saved file
-    public HotbarManager()
+    public HotbarManager(Arena arena)
     {
         this.layout = new ItemCategory[HOT_BAR_END.getValue()];
-         editor = Bukkit.createInventory(null, InventoryProperty.SHOP_SIZE.getValue(),InventoryName.HOTBAR_MANAGER.getTitle());
+         editor = new HotbarEditorInventory(arena);
+
+
 
         initInventory();
-        addCategory(ItemCategory.MELEE,0);
+        defaultConfig();
         updateDisplay();
     }
 
 
 
     //creating a manager with a layout from a saved file
-    public HotbarManager(ItemCategory[] layout)
+    public HotbarManager(ItemCategory[] layout, Arena arena)
     {
 
-        editor = Bukkit.createInventory(null, InventoryProperty.SHOP_SIZE.getValue(),InventoryName.HOTBAR_MANAGER.getTitle());
+        editor = new HotbarEditorInventory(arena);
         if ((layout==null)||(layout.length!= HOT_BAR_END.getValue())) {
             this.layout = new ItemCategory[HOT_BAR_END.getValue()];
-            addCategory(ItemCategory.MELEE,0);
+            defaultConfig();
         }
         else {
             this.layout = layout;
@@ -62,12 +71,17 @@ public class HotbarManager
             }
 
             if (empty)
-                addCategory(MELEE,0);
+                defaultConfig();
         }
 
 
         initInventory();
         updateDisplay();
+    }
+
+    private void defaultConfig(){
+        addCategory(ItemCategory.MELEE,0);
+        addCategory(TRACKER, 8);
     }
 
 
@@ -155,15 +169,18 @@ public class HotbarManager
     }
 
     public void display(Player player) {
-        player.openInventory(editor);
+        player.openInventory((Inventory)editor);
     }
 
     public boolean invEquals(Inventory other){
         return other.equals(editor);
     }
 
+    public IGameInventory getEditor() {
+        return editor;
+    }
 
-        /*
+    /*
 
 
 

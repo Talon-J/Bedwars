@@ -1,7 +1,7 @@
 package me.camm.productions.bedwars.Arena.GameRunning.Events;
 
 
-/**
+/*
  * @author CAMM
  * This class models non physical events (These events only have to do with
  * scoreboards or the chat)
@@ -13,7 +13,7 @@ public class ChatAction extends Action
     private boolean spent;
 
 
-    /**
+    /*
      *
      * @param text the text to send
      */
@@ -26,7 +26,7 @@ public class ChatAction extends Action
     @Override
     public void activate() {
         if (!spent)
-        sender.sendMessage(text);
+            sender.sendMessage(text);
         spent = true;
     }
 }

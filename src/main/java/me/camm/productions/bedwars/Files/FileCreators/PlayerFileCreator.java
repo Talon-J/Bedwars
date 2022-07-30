@@ -10,11 +10,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
+import static me.camm.productions.bedwars.Util.Helpers.StringHelper.*;
+
 /**
  * @author CAMM
  * This class is used for creating player-specific data files
  */
-public class PlayerFileCreator extends StringHelper
+public class PlayerFileCreator
 {
     private final BattlePlayer player;
 
@@ -24,7 +26,7 @@ public class PlayerFileCreator extends StringHelper
 
     public PlayerFileCreator(BattlePlayer player, Arena arena)
     {
-        super(arena.getPlugin());
+
         this.player = player;
         sender = ChatSender.getInstance();
 
@@ -39,7 +41,7 @@ public class PlayerFileCreator extends StringHelper
         if (create(playerDirectory, true))
             sender.sendConsoleMessage("Completed file folder creation operations for player "+player.getRawPlayer().getName(),Level.INFO);
         else
-            sender.sendConsoleMessage("Was unable to verify the file folder for player "+player.getRawPlayer().getName(),Level.WARNING);
+            sender.sendConsoleMessage("Unable to verify the file folder for player "+player.getRawPlayer().getName(),Level.WARNING);
      }
 
      //creates the inv configuration file
@@ -73,9 +75,17 @@ public class PlayerFileCreator extends StringHelper
          if (!file.exists())
          {
              try {
-                 if (isDir)
-                     file.mkdir();
-                file.createNewFile();
+                 if (isDir) {
+                     boolean success = file.mkdir();
+
+
+
+                     if (!success)
+                         return false;
+                 }
+
+                 return file.createNewFile();
+
              }
              catch (IOException e)
              {

@@ -1,4 +1,4 @@
-package me.camm.productions.bedwars.Items.ItemDatabases;
+package me.camm.productions.bedwars.Items.SectionInventories.Templates;
 
 import org.bukkit.ChatColor;
 
@@ -17,9 +17,11 @@ public enum InventoryName
     TOOLS("Tools"),
     RANGED("Ranged"),
     POTION("Potions"),
-    TRACKER("(WIP) Tracker"),
-    EDIT_QUICKBUY("(WIP) Adding item to Quick Buy..."),
-    HOTBAR_MANAGER("(WIP) Hotbar Manager"),
+    TRACKER("Tracker"),
+    EDIT_QUICKBUY("Adding item to Quick Buy..."),
+    HOTBAR_MANAGER("Hotbar Manager"),
+    TRACKER_COMMS("Tracker and Communications"),
+    QUICK_CHAT("Quick Chat"),
     UTILITY("Utility");
 
     private final String title;

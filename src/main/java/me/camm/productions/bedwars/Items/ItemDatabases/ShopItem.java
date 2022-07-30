@@ -1,16 +1,18 @@
 package me.camm.productions.bedwars.Items.ItemDatabases;
 
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
 import static me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory.*;
 
-/**
+/*
  * @author CAMM
  * This enum represents all of the buyable items in the shops (quick buy shops)
  */
 public enum ShopItem
 {
+
     WOOL(4, 16, Material.WOOL, Material.IRON_INGOT, ChatColor.GRAY + "Wool", BLOCK, false, false, 4),
     LADDER(4, 16, Material.LADDER, Material.IRON_INGOT, ChatColor.GRAY + "Ladder", BLOCK, false, false, 4),
     STAINED_GLASS(12, 4, Material.STAINED_GLASS, Material.IRON_INGOT, ChatColor.GRAY + "Blast Resistant Glass", BLOCK, true, false, 12),
@@ -70,8 +72,8 @@ public enum ShopItem
 
     //Navigational and utility items
     SEPARATOR(1, 1, Material.STAINED_GLASS_PANE, Material.AIR, ChatColor.DARK_GRAY+"\u21e7 Categories "+ChatColor.GRAY+"\u21e9 Items", ItemCategory.SEPARATOR, false, false, 0),
-
-    TRACKER_NAV(1,1,Material.COMPASS,Material.AIR,ChatColor.GOLD+"Tracker",TRACKER,false, false, 0),
+    EMPTY_SLOT(1, 1, Material.STAINED_GLASS_PANE, Material.STAINED_GLASS_PANE, ChatColor.GOLD + "Empty Slot", NONE, true, false, 0),
+    TRACKER_NAV(4,1,Material.COMPASS,Material.EMERALD,ChatColor.GOLD+"Tracker",TRACKER,false, false, 6),
     BLOCKS_NAV(1, 1, Material.HARD_CLAY, Material.AIR, ChatColor.DARK_GREEN+"Blocks", NAV, false, false, 0),
     MELEE_NAV(1, 1, Material.GOLD_SWORD, Material.AIR, ChatColor.DARK_AQUA+"Melee", NAV, false, false, 0),
     ARMOR_NAV(1, 1, Material.CHAINMAIL_BOOTS, Material.AIR, ChatColor.YELLOW+"Armor", NAV, false, false, 0),
@@ -81,18 +83,18 @@ public enum ShopItem
     UTILITY_NAV(1, 1, Material.TNT, Material.AIR, ChatColor.RED+"Utility", NAV, false, false, 0),
     HOTBAR_NAV(1, 1, Material.BLAZE_POWDER, Material.AIR, ChatColor.GOLD+"Hotbar Manager", NAV, false, false, 0),
     HOME_NAV(1, 1, Material.NETHER_STAR, Material.AIR, ChatColor.GREEN + "Home", NAV, false, false, 0),
-    EMPTY_SLOT(1, 1, Material.STAINED_GLASS_PANE, Material.STAINED_GLASS_PANE, ChatColor.GOLD + "Empty Slot", NONE, true, false, 0);
+   ;
 
-    public int cost;
-    public int sellAmount;
-    public Material sellMaterial;
-    public Material costMaterial;
-    public String name;
-    public ItemCategory category;
-    public boolean keepName;
+    public final int cost;
+    public final int sellAmount;
+    public final Material sellMaterial;
+    public final Material costMaterial;
+    public final String name;
+    public final ItemCategory category;
+    public final boolean keepName;
 
-    public boolean isPermanent;
-    public int inflatedPrice;
+    public final boolean isPermanent;
+    public final int inflatedPrice;
 
 
     ShopItem(int cost, int sellAmount, Material sellMaterial, Material costMaterial, String name, ItemCategory category, boolean keepName, boolean isPermanent, int inflatedPrice) {

@@ -75,6 +75,22 @@ public class GameIntializer implements CommandExecutor
         try {
             switch (word) {
                 case SETUP:
+
+
+                    if (runner != null) {
+                        if (runner.isRunning()) {
+                            sender.sendMessage("You must end the game manually first.");
+                           break;
+                        }
+                    }
+
+                    if (arena != null) {
+                        sender.sendMessage("Overriding previous set up for the arena.");
+                        arena.unregisterMap();
+                    }
+
+
+
                     runner = processor.initRunner(sender, plugin);
                     arena = runner.getArena();
                     break;

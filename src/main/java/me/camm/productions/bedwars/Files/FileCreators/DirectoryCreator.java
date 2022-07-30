@@ -5,166 +5,154 @@ import me.camm.productions.bedwars.Files.FileKeywords.Instructions;
 import me.camm.productions.bedwars.Files.FileStreams.GameFileWriter;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Util.Helpers.StringHelper;
-import org.bukkit.ChatColor;
-import org.bukkit.Server;
+import me.camm.productions.bedwars.Validation.BedWarsException;
+import me.camm.productions.bedwars.Validation.FileException;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
-/**
+import static me.camm.productions.bedwars.Util.Helpers.StringHelper.*;
+
+/*
  * @author CAMM
  * Class for creating folders in the server files for configuration
  */
-public class DirectoryCreator extends StringHelper
+public class DirectoryCreator
 {
-    private Server server;
-    private Plugin plugin;
+    private final Plugin plugin;
 
-    private File mainFile;
-    private File teamFile;
-    private File worldFile;
-    private File playerFolder;
-    private File credits;
-    private File instructionFile;
+    private final File credits;
+    private final File instructionFile;
 
+    private final File[] list;
+    private final File[] folders;
+
+    List<String[]> contributors;
+    List<String[]> instructions;
     private final ChatSender sender;
 
 
-    public DirectoryCreator(Plugin plugin)
+    public DirectoryCreator(Plugin plugin) throws BedWarsException
     {
-        super(plugin);
+
+        contributors = new ArrayList<>();
+        instructions = new ArrayList<>();
+
         sender = ChatSender.getInstance();
+        this.plugin = plugin;
+
+
+        File mainFile = new File(StringHelper.getMainFolderPath());
+        File teamFile = new File(getTeamPath());
+        File worldFile = new File(getWorldPath());
+        File playerFolder = new File(getPlayerFolderPath());
+        credits = new File(getCreditsPath());
+        instructionFile = new File(getInstructionsPath());
+
+        list = new File[]{mainFile, teamFile, worldFile, playerFolder, credits, instructionFile};
+        folders = new File[]{mainFile, playerFolder};
+
+        init();
+
+    }
+
+    private void init() throws BedWarsException {
+
+        ContributorList[] contributors = ContributorList.values();
+        Instructions[] instructions = Instructions.values();
+
+        for (ContributorList list: contributors) {
+            this.contributors.add(list.getSection());
+        }
+
+        for (Instructions instruct: instructions) {
+            this.instructions.add(instruct.getInstructions());
+        }
+
+
+        sender.sendConsoleMessage("Attempting to designate folders...", Level.INFO);
 
         try {
-            this.plugin = plugin;
-            this.server = plugin.getServer();
 
+            for (File file: folders) {
 
-            mainFile = new File(getMainFolderPath());
-            teamFile = new File(getTeamPath());
-            worldFile = new File(getWorldPath());
-            playerFolder = new File(getPlayerFolderPath());
-            credits = new File(getCreditsPath());
-            instructionFile = new File(getInstructionsPath());
+                if (file.exists() && file.isDirectory()) {
+                    sender.sendConsoleMessage("Detected that Plugin File folder "+file.getName()+" exists",Level.INFO);
+                    continue;
+                }
 
+                if (!file.mkdir()) {
+                    throw new FileException("Could not make the "+file.getName()+" a folder");
+                }
 
-
-
-            //this.getDataFolder().getParentFile().getAbsolutePath()
-            if (!mainFile.mkdir())
-             sender.sendMessage("COULD NOT INITIALIZE MAIN FOLDER. (Does it already exist?)");
-
-
-            if (!playerFolder.mkdir())
-                sender.sendMessage("COULD NOT INITIALIZE PLAYER FOLDER. (Does it already exist?)");
+                sender.sendConsoleMessage("Made the "+file.getName()+" file a folder", Level.INFO);
+            }
 
         }
-        catch (Exception e)
-        {
-            sender.sendConsoleMessage("COULD NOT INITIALIZE FOLDERS. [We can't set up the game like this!]",Level.SEVERE);
+        catch (Exception e) {
+            throw new FileException("Could not initialize the main and player folders");
         }
     }
 
 
     //Creates the directory folders the plugin uses
-    public boolean createFolders()
+    public void createFiles() throws BedWarsException
     {
+
+        boolean allExists = true;
+        sender.sendConsoleMessage("Attempting to create files...",Level.INFO);
+        for (File file: list) {
+            try {
+
+                if (file.exists()) {
+                    sender.sendConsoleMessage("Detected that the file: "+file.getName()+" exists",Level.INFO);
+                    continue;
+                }
+
+                if (!file.createNewFile()) {
+                    throw new FileException("Could not create the file: "+file.getName()+" with the path: "+file.getAbsolutePath());
+                }
+
+                sender.sendConsoleMessage("Created a new "+file.getName()+" file",Level.INFO);
+                allExists = false;
+
+            }
+            catch (IOException e) {
+                throw new FileException(e.getMessage());
+            }
+        }
+
+
         try {
-            ArrayList<String[]> contributors = new ArrayList<>();
-            ContributorList[] values = ContributorList.values();
-            for (ContributorList contributorList: values)
-                contributors.add(contributorList.getSection());
 
 
-            ArrayList<String[]> instructions = new ArrayList<>();
-            for (Instructions i: Instructions.values())
-                instructions.add(i.getInstructions());
+            GameFileWriter creditWriter = new GameFileWriter(credits.getAbsolutePath(), plugin);
+            GameFileWriter instructWriter = new GameFileWriter(instructionFile.getAbsolutePath(), plugin);
+
+            sender.sendConsoleMessage("Refreshing instructions and credits...",Level.INFO);
+
+            creditWriter.clear();
+            creditWriter.writeSection(contributors);
+
+            instructWriter.clear();
+            instructWriter.writeSection(instructions);
 
 
-            if (!mainFile.exists())
-            {
-                mainFile.createNewFile();
-                sender.sendMessage("Creating new Main Directory.");
+            if (allExists) {
+                sender.sendConsoleMessage("All files exist. Please make sure they are configured.", Level.INFO);
             }
             else
-                sender.sendMessage("Main Directory Exists.");
+                throw new FileException("File creation failed. Not all files exist.");
 
 
-            GameFileWriter creditWriter = new GameFileWriter(credits.getAbsolutePath(),plugin);
-            GameFileWriter instructWriter = new GameFileWriter(instructionFile.getAbsolutePath(),plugin);
-
-            if (mainFile.exists()&&
-                    teamFile.exists()&&
-                    worldFile.exists()&&
-                    playerFolder.exists()&&
-                    credits.exists()&&
-                    instructionFile.exists())
-            {
-                sender.sendMessage("All files exist. Please make sure they are configured.");
-
-                creditWriter.clear();
-                creditWriter.writeSection(contributors);
-
-                instructWriter.clear();
-                instructWriter.writeSection(instructions);
-                return true;
-            }
-            else
-            {
-                sender.sendPlayerMessage("AT-LEAST 1 FILE IN THE CONFIGURATION IS NOT CONFIGURED.", ChatSender.GameState.WARN);
-                createFiles(mainFile);
-                createFiles(teamFile);
-                createFiles(worldFile);
-                createFiles(playerFolder);
-                createFiles(credits);
-                createFiles(instructionFile);
-
-                creditWriter.clear();
-                creditWriter.writeSection(contributors);
-
-                instructWriter.clear();
-                instructWriter.writeSection(instructions);
-
-
-                return false;
-            }
-        }
-        catch (Exception e)
-        {
-            sender.sendPlayerMessage("COULD NOT VERIFY FILE INTEGRITY.", ChatSender.GameState.ERROR);
-
-            return false;
+        }catch (Exception e) {
+            throw new FileException(e.getMessage());
         }
 
-    }
-
-    //creates a file.
-    private boolean createFiles(File file)
-    {
-        if (!file.exists())
-        {
-            try
-            {
-               file.createNewFile();
-               return false;  //the file is not init
-            }
-            catch (FileNotFoundException e)
-            {
-                sender.sendPlayerMessage("Could not create file "+file.getName()+" (file not found)", ChatSender.GameState.ERROR);
-
-                return false;
-            }
-            catch (IOException e)
-            {
-                sender.sendPlayerMessage("Could not create file "+file.getName()+" (IOException)", ChatSender.GameState.ERROR);
-                return false;
-            }
-        }
-        return true;  //file is init
     }
 
 }

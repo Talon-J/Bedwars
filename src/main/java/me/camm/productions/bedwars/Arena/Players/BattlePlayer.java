@@ -5,8 +5,11 @@ import me.camm.productions.bedwars.Arena.Players.Managers.HotbarManager;
 import me.camm.productions.bedwars.Arena.Players.Managers.PlayerInventoryManager;
 import me.camm.productions.bedwars.Arena.Players.Scoreboards.PlayerBoard;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
+import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Arena.Teams.TeamTitle;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyEditor;
+import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyEditorInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Listeners.PacketHandler;
 import me.camm.productions.bedwars.Entities.ShopKeeper;
 import me.camm.productions.bedwars.Files.FileCreators.PlayerFileCreator;
@@ -41,7 +44,7 @@ import java.util.*;
 import static me.camm.productions.bedwars.Arena.Players.Scoreboards.ScoreBoardHeader.*;
 
 
-/**
+/*
 
  @author CAMM
  This is a wrapper class for a player that provides added information about
@@ -52,6 +55,10 @@ public class BattlePlayer
 
     private final Arena arena;
     private volatile Player player;
+    private TeamColor teamImprint;
+
+
+    private BattleTeam tracking;
 
     //system time of when they last drank milk
     private volatile long lastMilk;
@@ -101,6 +108,7 @@ public class BattlePlayer
     private volatile int finals;
     private volatile int kills;
     private volatile int beds;
+    private int deaths;
 
 
 
@@ -113,20 +121,32 @@ public class BattlePlayer
 
 
     //editor for the quickbuy
-    private QuickBuyEditor quickEditor;
-
-
-
+    private QuickBuyEditorInventory quickEditor;
     private static final int eliminationTime;
+
+
+    private final Map<Integer, IGameInventory> accessibleInventories;
+
+
+
+
+
+
     static {
         eliminationTime = 5;
     }
 
+
+
+
     //constructor
     public BattlePlayer(Player player, BattleTeam team, Arena arena, int number)
     {
+
         this.arena = arena;
         this.team = team;
+        teamImprint = team.getTeamColor();
+        this.tracking = null;
 
         this.number = number;
         this.player = player;
@@ -139,6 +159,8 @@ public class BattlePlayer
         this.finals = 0;
         this.kills = 0;
         this.beds = 0;
+        this.deaths = 0;
+
 
         this.barManager = null;
         this.shopManager = null;
@@ -150,6 +172,7 @@ public class BattlePlayer
         armor = TieredItem.LEATHER_ARMOR;
 
         this.toResend = new HashMap<>();
+        this.accessibleInventories = new HashMap<>();
 
         //create the scoreboard
         createBoard();
@@ -157,6 +180,7 @@ public class BattlePlayer
         //create the config files if they don't exist
         PlayerFileCreator creator = new PlayerFileCreator(this,arena);
         creator.createDirectory(); creator.createHotBarFile(); creator.createInventoryFile();
+
 
 
 
@@ -182,6 +206,27 @@ public class BattlePlayer
         playerTeam.setSuffix(team.getTeamPostfix());
         player.setScoreboard(healthBoard);
         playerTeam.addPlayer(player);
+    }
+
+    public void setTracking(BattleTeam tracking) {
+        this.tracking = tracking;
+    }
+
+    public BattleTeam getTracking() {
+        return tracking;
+    }
+
+    public Map<Integer, IGameInventory> getAccessibleInventories(){
+        return accessibleInventories;
+    }
+
+
+    public void addAccessibleInventory(IGameInventory inventory){
+        accessibleInventories.put(inventory.hashCode(), inventory);
+    }
+
+    public void setImprint(BattleTeam team){
+        this.teamImprint = team.getTeamColor();
     }
 
 
@@ -232,12 +277,21 @@ public class BattlePlayer
      */
     public void instantiateConfig(boolean isInflated)
     {
-        PlayerFileReader reader = new PlayerFileReader(arena.getPlugin(),this.player,isInflated);
+        PlayerFileReader reader = new PlayerFileReader(arena.getPlugin(),this,isInflated, arena);
         this.barManager = reader.readBarFile();
         this.shopManager = reader.readInvFile();
 
-         quickEditor = new QuickBuyEditor(this);
-        shopManager.setOwner(this);
+
+        Arrays.stream(shopManager.getShopInventories()).forEach(inv -> accessibleInventories.put(inv.hashCode(), inv));
+
+         quickEditor = new QuickBuyEditorInventory(this);
+
+         addAccessibleInventory(quickEditor);
+         addAccessibleInventory(barManager.getEditor());
+         addAccessibleInventory(team.getTeamInventory());
+         addAccessibleInventory(arena.getChatInv());
+         addAccessibleInventory(arena.getSelectionInv());
+
     }
 
     /*
@@ -253,7 +307,7 @@ public class BattlePlayer
             hideArmor();
             handler.addInvisiblePlayer(this.player);
             if (playerTeam!=null)
-            playerTeam.setNameTagVisibility(NameTagVisibility.NEVER);
+             playerTeam.setNameTagVisibility(NameTagVisibility.NEVER);
         }
         else
         {
@@ -315,7 +369,7 @@ public class BattlePlayer
     }
 
     //Send packets to all players which are not this player
-    public void sendPacketsAllNonEqual(Packet<?> packet){
+    public void sendPacketsAllNonEqual(Packet<?> packet) {
         arena.getPlayers().forEach((uuid,battlePlayer) -> {
             if (!battlePlayer.equals(this)) {
                 battlePlayer.sendPacket(packet);
@@ -398,6 +452,7 @@ public class BattlePlayer
 
            //Adding the player to the new team.
            this.team.addPlayer(this);
+          setImprint(this.team);
 
            player.setScoreboard(arena.getHealthBoard());
            board.switchPrimaryBuffer();
@@ -493,6 +548,12 @@ public class BattlePlayer
             setAlive(false);
             ((CraftPlayer)player).getHandle().collidesWithEntities = false;
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,Integer.MAX_VALUE,0,false,false));
+
+
+            tracking = null;
+            deaths ++;
+
+
         }
         else
         {
@@ -522,7 +583,7 @@ public class BattlePlayer
     /*
     Puts a player into spectator mode
     if is final, will not make a countdown timer for respawning
-    TODO change the placeholder message
+
      */
     public void handlePlayerIntoSpectator(@NotNull PacketHandler handler, boolean isFinal, @Nullable Player killer)
     {
@@ -551,7 +612,7 @@ public class BattlePlayer
                team.eliminate();
 
             if (killer !=null && sendMessage)
-                killer.sendMessage("[PLACEHOLDER] - Items put from the enderchest of "+player.getName()+" into their forge.");
+                killer.sendMessage(ChatColor.YELLOW+"Items dropped from "+player.getName()+" have been put into their team's forge.");
 
             return;
         }
@@ -625,11 +686,15 @@ public class BattlePlayer
             barManager.set(ItemHelper.toSoldItem(axe.getItem(), this), getAxe().getItem(), player);
         }
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
+
         heal();
         equipArmor();
 
         sendTitle(TeamTitle.RESPAWNED.getMessage(), null,2,40,10);
         team.applyPlayerModifiersToPlayer(this);
+
+
     }
 
 
@@ -658,6 +723,7 @@ public class BattlePlayer
         heal();
         equipArmor();
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
     }
 
 
@@ -926,6 +992,16 @@ public class BattlePlayer
         this.kills = newKills;
     }
 
+    public void printStatistics(){
+        player.sendMessage("=== Statistics ===");
+        player.sendMessage("Played for Team:"+teamImprint.getName());
+        player.sendMessage("Kills:"+kills);
+        player.sendMessage("Finals:"+finals);
+        player.sendMessage("Beds broken:"+beds);
+        player.sendMessage("Deaths:"+deaths);
+
+    }
+
 
 
     //////////////////////////////////////////
@@ -1097,7 +1173,7 @@ public class BattlePlayer
         return this.isEliminated;
     }
 
-    public QuickBuyEditor getQuickEditor() {
+    public QuickBuyEditorInventory getQuickEditor() {
         return quickEditor;
     }
 

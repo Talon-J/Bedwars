@@ -1,13 +1,13 @@
 package me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations;
 
-import me.camm.productions.bedwars.Items.ItemDatabases.InventoryProperty;
+import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
 
-/**
+/*
  * @author CAMM
  * This enum is used as a template for placing items into section inventories
  */
