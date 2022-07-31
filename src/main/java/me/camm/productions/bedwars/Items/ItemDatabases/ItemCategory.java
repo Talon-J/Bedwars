@@ -19,7 +19,7 @@ public enum ItemCategory
     UTILITY(ChatColor.AQUA+"Utility",ShopItem.UTILITY_NAV),
     NAV(ChatColor.GOLD+"Navigation",null),
     OPERATOR(ChatColor.GOLD+"Operator",null),
-    TRACKER("Tracker",ShopItem.TRACKER_NAV),
+    TRACKER("Tracker",ShopItem.TRACKER_ITEM),
     SEPARATOR(ChatColor.GRAY+"Separator",null);
 
     public final String type;

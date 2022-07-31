@@ -9,13 +9,13 @@ import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import org.bukkit.inventory.ItemStack;
 
-public class TrackerInventory extends TeamOptionInventory {
+public class TrackerInventory extends InventoryOptionable {
 
     private static final ItemStack ITEM = ItemHelper.toBarItem(ItemCategory.TRACKER);
     private PlayerTrackerManager manager;
-    private static final ShopItem TRACKER = ShopItem.TRACKER_NAV;
+    private static final ShopItem TRACKER = ShopItem.TRACKER_ITEM;
 
-    public TrackerInventory(Arena arena) throws IllegalStateException {
+    public TrackerInventory(Arena arena) {
         super(arena);
     }
 
@@ -38,7 +38,7 @@ public class TrackerInventory extends TeamOptionInventory {
         }
 
         int price = inflated ? TRACKER.inflatedPrice : TRACKER.cost;
-        boolean paid = ItemHelper.didPay(battlePlayer, ShopItem.TRACKER_NAV.costMaterial,price);
+        boolean paid = ItemHelper.didPay(battlePlayer, ShopItem.TRACKER_ITEM.costMaterial,price);
 
         if (paid) {
             battlePlayer.setTracking(preference);

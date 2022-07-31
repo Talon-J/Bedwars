@@ -9,7 +9,7 @@ import me.camm.productions.bedwars.Generators.Forge;
 import me.camm.productions.bedwars.Items.ItemDatabases.BattleEnchantment;
 import me.camm.productions.bedwars.Items.ItemDatabases.TeamItem;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamBuyInventory;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamOptionInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.InventoryOptionable;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TrackerInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamInventoryConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
@@ -62,7 +62,7 @@ public class BattleTeam
     private ExecutableBoundaryLoader loader;
    // private boolean auraActive;
     private final ChatSender sender;
-    private final TeamOptionInventory trackerInventory;
+    private final InventoryOptionable trackerInventory;
 
 
     //////////////////////////////////////////////////////////////////
@@ -75,7 +75,6 @@ public class BattleTeam
     private final GameBoundary bed;
     private volatile boolean bedBroken;
     private final Coordinate chest;
-    private final GameBoundary box;
     private final GameBoundary aura;
     private final GameBoundary trapArea;
 
@@ -117,7 +116,6 @@ public class BattleTeam
         this.canStartForge = true;
         this.bed = bed;
         this.chest = chest;
-        this.box = unbreakable;
 
         this.aura = aura;
 
@@ -158,7 +156,7 @@ public class BattleTeam
         teamBounds = new Tuple3[]{
                 new Tuple3<>(BED.getData(),this.bed,NOT_AIR),
                 new Tuple3<>(CHEST.getData(),this.chest,null),
-                new Tuple3<>(BASE.getData(),box,AIR_ONLY),
+                new Tuple3<>(BASE.getData(), unbreakable,AIR_ONLY),
                 new Tuple3<>(AURA.getData(),this.aura,EVERYTHING),
                 new Tuple3<>(teamColor.getName(),this.aura,EVERYTHING),
                 new Tuple3<>(TRAP.getData(),this.trapArea,EVERYTHING),
@@ -505,7 +503,7 @@ It is up to the calling method to update the scoreboards of the players.
     }
 
 
-    public TeamOptionInventory getTrackerInventory(){
+    public InventoryOptionable getTrackerInventory(){
         return trackerInventory;
     }
 

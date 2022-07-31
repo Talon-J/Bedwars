@@ -229,6 +229,7 @@ public class HotbarManager
 
     public void set(ItemStack item, ShopItem enumItem, Player player, @Nullable InventoryClickEvent event) {
 
+
         ItemCategory category = enumItem.category;
         Inventory playerInv = player.getInventory();
 
@@ -333,6 +334,8 @@ public class HotbarManager
     }
 
     private void doNormalSet(Inventory playerInv, ShopItem enumItem, ItemStack item, Player player,@Nullable InventoryClickEvent event) {
+
+
 
         if (event != null) {
 

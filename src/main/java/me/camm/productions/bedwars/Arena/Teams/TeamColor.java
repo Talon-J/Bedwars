@@ -67,4 +67,8 @@ public enum TeamColor
     public DyeColor getDye() {
         return dye;
     }
+
+    public String format(){
+        return getColor()+getName();
+    }
 }

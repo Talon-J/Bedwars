@@ -7,6 +7,7 @@ import me.camm.productions.bedwars.Arena.Players.Managers.PlayerInventoryManager
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamTraps.*;
 import me.camm.productions.bedwars.Generators.Forge;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.HotbarEditorInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
 import me.camm.productions.bedwars.Items.ItemDatabases.ShopItem;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
@@ -16,10 +17,10 @@ import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuy
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.HotBarConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamInventoryConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
+import net.minecraft.server.v1_8_R3.Tuple;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryCrafting;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryDoubleChest;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventory;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
@@ -30,7 +31,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 
 public class InventoryOperationHelper
 {
@@ -78,8 +82,7 @@ public class InventoryOperationHelper
                 !event.getView().getBottomInventory().equals(restrictedInv) &&
                 !clickedInventory.equals(restrictedInv)) {
 
-            System.out.println("c1");
-            return false;
+           return false;
         }
 
 
@@ -88,7 +91,6 @@ public class InventoryOperationHelper
         //if the player tried to shift click something into the inventory
         // (Either from the player inv -> shop,  or shop -> player inv)
         if (event.isShiftClick() && (topInventory.equals(restrictedInv) || playerInventory.equals(restrictedInv))) {
-            System.out.println("c2");
             return true;
         }
 
@@ -98,12 +100,12 @@ public class InventoryOperationHelper
                         name.contains(Values.MOVE.name()) ||
                         name.contains(Values.SWAP.name()))) {
 
-            System.out.println("c3");
+
             return false;
         }
 
 
-        System.out.println("c4");
+
         return name.contains(Values.HOTBAR.name()) ||
                 name.contains(Values.PLACE.name()) ||
                 name.contains(Values.MOVE.name()) ||
@@ -113,10 +115,56 @@ public class InventoryOperationHelper
 
 
 
-    public static boolean didTryToDragIn(InventoryDragEvent event, Inventory restrictedInventory)
+    public static boolean didTryToDragIn(InventoryDragEvent event, Inventory restrictedInv)
     {
-        Inventory eventInv = event.getInventory();
-        return eventInv.equals(restrictedInventory);
+        Inventory top = event.getView().getTopInventory();
+        Inventory bottom = event.getView().getBottomInventory();
+
+
+        int topSize, bottomSize;
+        topSize = top.getSize();
+        bottomSize = bottom.getSize();
+
+        int topEnd = topSize -1;
+        int bottomEnd = topEnd + bottomSize;
+
+
+        Set<Integer> slots = event.getRawSlots();
+        Tuple<Integer, Integer> range = getSlotPair(slots);
+
+        if (range == null)
+        {
+            event.setCancelled(true);
+            return true;
+        }
+
+
+        boolean equals = false;
+        int significantStart = -1;
+        int significantEnd = -1;
+
+        if (restrictedInv.equals(top)) {
+            equals = true;
+            significantEnd = topEnd;
+            significantStart = 0;
+        }
+
+        if (restrictedInv.equals(bottom)) {
+            equals = true;
+            significantStart = topSize;  //start of bottom inv
+            significantEnd = bottomEnd;
+        }
+
+
+        if (!equals)
+            return false;
+
+        int dragStart = range.a();
+        int dragEnd = range.b();
+
+        return dragStart >= significantStart || dragEnd <= significantEnd;
+
+
     }
 
 
@@ -127,13 +175,27 @@ public class InventoryOperationHelper
     This method handles restrictions default for inventories, and cancels the inventory click event if
     any restrictions are triggered.
 
+    Restrictions countered:
+     - trying to place restricted items into inventories
+     - armor
+     - trying to use restricted inventories which are NOT instances of the custom inventories
+     - trying to place navigators into the player inventory
+
+
+     This method also handles the sword count in the player inventory.
+     Checks should already have been performed to determine if the player has clicked on a game inventory or not.
+
+
     @author CAMM
     @param event: The event in question
     @param arena: The arena for which the game is taking in
     @pre: The managers for the player should be set up first before calling this method, or there may be a
-    nullpointer exception when handling sword counts
-    @return: Whether or not the event was cancelled
+    null pointer exception when handling sword counts
+    @return: Whether the event was cancelled
 
+
+
+//good
      */
     public static void handleDefaultRestrictions(InventoryClickEvent event, Arena arena){
 
@@ -143,155 +205,74 @@ public class InventoryOperationHelper
             return;
 
 
+
         Inventory topInv = event.getInventory();
-        Inventory clickedInv = event.getClickedInventory();
         Inventory playerInv = clicked.getRawPlayer().getInventory();
 
 
         ItemStack clickedItem = event.getCurrentItem();
+        // the item which was in the slot of the inventory
+        //at the time of the click. It likely is not still in the slot, but now in the cursor
+
         ItemStack cursorItem = event.getCursor();
+        //the item which was on the cursor at the time of the click. Likely is now in the slot
 
 
-        if (!ItemHelper.isItemInvalid(cursorItem) && ItemHelper.isArmor(cursorItem.getType())) {
+        Map<Integer, IGameInventory> accessibleInvs = clicked.getAccessibleInventories();
+
+        IGameInventory customInv = accessibleInvs.getOrDefault(topInv.hashCode(), null);
+        if (customInv == null) {
+            handleDefaultItemRestrictions(clickedItem, cursorItem, event, topInv, playerInv);
+            return;
+        }
+
+        //if they tried to place an item into their inventory, then we gotta do checks to make sure it's not
+        // from the hb editor
+        if (handleClickAttempt(event, playerInv)) {
+            if (customInv instanceof HotbarEditorInventory && ItemHelper.getNavigator(cursorItem) != null) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        if (handleClickAttempt(event, topInv)) {
+            event.setCancelled(true);
+        }
+
+
+
+    }
+
+    //Good
+    private static void handleDefaultItemRestrictions(ItemStack clickedItem, ItemStack cursorItem, InventoryClickEvent event, Inventory topInv, Inventory playerInv){
+
+        //at this point, it could still be any inventory, but the difference is that they won't be placing into their inv,
+        //they'll only be placing out into the top inv
+
+
+        Class<? extends Inventory> clazz = topInv.getClass();
+        if (!clazz.equals(CraftInventory.class) && InventoryOperationHelper.handleClickAttempt(event,topInv))
+        {
             event.setCancelled(true);
             return;
         }
 
-        //If the top inventory is an inventory for crafting, and they clicked in the top inventory
-        //a crafting inventory in this case would be the player's own crafting grid, since we already cancel interactions with
-        //crafting tables
-        if (topInv instanceof CraftInventoryCrafting && clickedInv.equals(topInv))
-        {
-          event.setCancelled(true);
-          return;
-        }
 
-        //we now know they clicked on a chest inv (top inv is chest inv) or their own inv
-
-        CLICKED_IN_CHEST: {
-            //if they didn't click in chest, get out
-            if (!topInv.equals(clickedInv))
-            {
-                break CLICKED_IN_CHEST;
-
-            }
-                //if they tried to put something into chest
-
-            //if they didn't try to place in the chest, then break (2nd check)
-            if (!handleClickAttempt(event, clickedInv))
-                break CLICKED_IN_CHEST;
-
-
-
-
-            /*
-            Swapping with the hotbar and an inventory
-             */
-            SWAP:
-            {
-
-                /*
-                If it doesn't contain an action to do with the HB, get out
-                 */
-                if (!event.getAction().name().contains(Values.HOTBAR.name())) {
-                    break SWAP;
-                }
-
-                    int hotBarButton = event.getHotbarButton();
-
-                    int raw = event.getRawSlot();
-                     ItemStack swapped = null;
-
-                     /*
-                     if it is valid, get the item.
-                      */
-                     if (hotBarButton != -1) {
-                         swapped = playerInv.getItem(hotBarButton);
-                     }
-
-                     if (swapped == null)
-                         break SWAP;
-
-
-                     boolean restrict = (!ItemHelper.isItemInvalid(swapped)) && ItemHelper.isInventoryPlaceRestrict(swapped);
-
-                     //if it's not restricted, get out
-                     if (!restrict) {
-                         break SWAP;
-                     }
-
-
-                if (topInv instanceof CraftInventoryCrafting) {
-                    if (raw < InventoryProperty.SMALL_CRAFTING_GRID.getValue()) {
-                        event.setCancelled(true);
-                        break SWAP;
-                    }
-                }
-
-                /*
-                If it's a shop, and the slot is in the shop, cancel.
-                 */
-                if (topInv instanceof CraftInventoryDoubleChest) {
-                    if (raw < InventoryProperty.SHOP_SIZE.getValue()) {
-                        event.setCancelled(true);
-                        break SWAP;
-                    }
-                }
-
-                /*
-                If the slot is from 0-26 then cancel
-                 */
-                if (raw < InventoryProperty.SMALL_SHOP_SIZE.getValue()) {
-                    event.setCancelled(true);
-                }
-            }
-
-
-                    //if it's restricted, then cancel the event. (Note that may be air)
-                    if (ItemHelper.isInventoryPlaceRestrict(cursorItem) || ItemHelper.isInventoryPlaceRestrict(clickedItem))
-                    {
-                        event.setCancelled(true);
-                        return;
-                    }
-                    else
-                    {
-                        //find out if they placed a sword in the inv. (item is not restricted)
-                        int swordsLeft = ItemHelper.countSwords(playerInv);
-                        if (swordsLeft!=1) {
-                            operateSwordCount(clicked);
-                            return;
-                        }
-                    }
-        }
-
-
-        //if they clicked something in their own inv
-        if (clickedInv.equals(playerInv))
-        {
-            if (ItemHelper.getNavigator(cursorItem) != null) {
+        if (ItemHelper.isInventoryPlaceRestrict(cursorItem) || ItemHelper.isInventoryPlaceRestrict(clickedItem)) {
+            if (InventoryOperationHelper.handleClickAttempt(event, topInv)) {
                 event.setCancelled(true);
                 return;
             }
 
+            boolean armor = false;
+            if (cursorItem != null && clickedItem != null) {
+                armor = ItemHelper.isArmor(cursorItem.getType()) || ItemHelper.isArmor(clickedItem.getType());
+            }
 
-            if (ItemHelper.isSword(cursorItem))
-                return;
-
-            if (ItemHelper.countSwords(playerInv) != 1)
-                operateSwordCount(clicked);
-
-                /*
-
-                If the cursor item has an item, then it will be transferred to the slot.
-                If the slot has an item, then check if it is a restricted item. (ONLY if the slot is not in the player inv)
-
-               if  restricted, then cancel the event.
-
-               if not restricted, then check the swords.
-
-                 */
+            if (event.getClickedInventory().equals(playerInv) && armor) {
+                event.setCancelled(true);
+            }
         }
-
     }
 
 
@@ -328,54 +309,102 @@ public class InventoryOperationHelper
 
         ItemStack dragged = event.getOldCursor();
         Inventory topInv = event.getView().getTopInventory();
+        Inventory bottomInv = event.getView().getBottomInventory();
+
+
+        if (ItemHelper.isItemInvalid(dragged))
+            return;
+
+        Map<Integer, IGameInventory> accessibles = clicked.getAccessibleInventories();
+
+        IGameInventory customInv = accessibles.getOrDefault(topInv.hashCode(), null);
+
+        if (customInv == null) {
+            handleDefaultItemRestrictions(dragged, topInv, bottomInv, event);
+            return;
+        }
+
+        if (customInv instanceof HotbarEditorInventory) {
+            if (didTryToDragIn(event, bottomInv)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+
+    private static void handleDefaultItemRestrictions(ItemStack dragged, Inventory top, Inventory bottom, InventoryDragEvent event) {
+
+
+
         Set<Integer> slots = event.getRawSlots();
-        int lowest = getLowestSlot(slots);
+        Tuple<Integer, Integer> slotPair = getSlotPair(slots);
 
-        boolean isRestricted = ItemHelper.isInventoryPlaceRestrict(dragged);
-
-        //so this should be their 2x2 default crafting grid
-        if (topInv instanceof CraftInventoryCrafting) {
-            if (lowest < InventoryProperty.SMALL_CRAFTING_GRID.getValue()) {
-                event.setCancelled(true);
-            }
-           return;
+        if (slotPair == null) {
+            event.setCancelled(true);
+            return;
         }
 
-        //it's just the regular old CraftInv
-        if (topInv instanceof CraftInventoryDoubleChest && isRestricted) {
-            if (lowest < InventoryProperty.SHOP_SIZE.getValue()) {
-                event.setCancelled(true);
-                return;
+        int topSize, bottomSize;
+        topSize = top.getSize();
+        bottomSize = bottom.getSize();
+
+
+
+
+        int topEnd = topSize - 1;
+        int bottomStart = topEnd + bottomSize;
+
+
+
+        if ((slotPair.a() <= topEnd || slotPair.b() <= topEnd)) {
+
+            Class<? extends Inventory> clazz = top.getClass();
+            //if it's just a normal chest
+            if (clazz.equals(CraftInventory.class)) {
+
+                if (ItemHelper.isInventoryPlaceRestrict(dragged))
+                    event.setCancelled(true);
             }
+            else event.setCancelled(true);
+
+            return;
         }
 
-        if (lowest < InventoryProperty.SMALL_SHOP_SIZE.getValue()) {
+        if ((slotPair.a() >= bottomStart || slotPair.b() >= bottomStart) && ItemHelper.isArmor(dragged.getType())) {
             event.setCancelled(true);
         }
 
 
-        /*
-        the ints are the max values of certain inventory slots. By validating that the lowest slot
-        is less than that, we make sure it is in the player's inventory. (Not the crafting grid, or a chest)
-         */
-
-
-
     }
 
-    private static int getLowestSlot(Set<Integer> slots ){
-        int lowest = -1;
+
+
+    private static Tuple<Integer, Integer> getSlotPair(Set<Integer> slots ){
+        int lowest = Integer.MAX_VALUE;
+        int highest = -1;
+
+  boolean found = false;
 
         for (int slot: slots) {
-            if (lowest == -1) {
+
+            if (slot < lowest) {
+                found = true;
                 lowest = slot;
             }
-            else {
-                if (slot < lowest)
-                    lowest = slot;
+
+            if (slot > highest) {
+                found = true;
+                highest = slot;
             }
+
+
         }
-        return lowest;
+
+        if (!found) {
+            return null;
+        }
+
+        return new Tuple<>(lowest, highest);
     }
 
 
@@ -632,7 +661,7 @@ public class InventoryOperationHelper
         if (residing == null)
             return;
 
-            final ItemStack replace = residing.clone();
+        final ItemStack replace = residing.clone();
 
             new BukkitRunnable() {
                 @Override
@@ -646,55 +675,13 @@ public class InventoryOperationHelper
     }
 
 
-
-
-    public static void operateHotBarDrag(InventoryDragEvent event, Arena arena)
-    {
-        BattlePlayer dragged = arena.getPlayers().getOrDefault(event.getWhoClicked().getUniqueId(),null);
-        if (dragged == null)
-            return;
-
-        Inventory top = event.getView().getTopInventory();
-        if (!dragged.getBarManager().invEquals(top))
-            return;
-
-        Set<Integer> slots = event.getRawSlots();
-        ItemStack cursor = event.getOldCursor();
-        if (cursor == null || cursor.getType()==Material.AIR)
-        {
-            event.setCancelled(true);
-            return;
-        }
-
-        if (ItemHelper.getNavigator(cursor) == null)
-        {
-            event.setCancelled(true);
-            return;
-        }
-
-        for (int slot: slots)
-        {
-            checkReturnReset(dragged, slot);
-
-
-            if (!HotbarManager.slotInRangeTake(slot) && !HotbarManager.slotInRangePlace(slot)) {
-                event.setCancelled(true);
-
-                System.out.println("[DEBUG] not in range for drag");
-                break;
-            }
-        }
-    }
-
-
-
     /*
     replace: the itemstack which will replace an existing item in the inventory
     We can assume that the player is the player that invoked the event
      */
     public static void operateInventoryEdit(InventoryClickEvent event, Arena arena){
 
-        System.out.println("edit");
+
         BattlePlayer player = arena.getPlayers().getOrDefault(event.getWhoClicked().getUniqueId(),null);
         if (player == null)
             return;
@@ -848,14 +835,7 @@ public class InventoryOperationHelper
 
     }
 
-
-
-
-
     /*
-   @Author CAMM
-   Unfinished. Still need to do the hotbar manager section.
-
 
    Takes an Inventory item, and a battle player.
    If the item is a navigation item, brings the player to a different inventory interface.
@@ -888,10 +868,6 @@ public class InventoryOperationHelper
 
             case HOTBAR_NAV:
                 player.getBarManager().display(rawPlayer);
-                break;
-
-            case TRACKER_NAV:
-                player.sendMessage("[DEBUG] nav to tracker (**NOT IMPLEMENTED YET)");
                 break;
 
             case RANGED_NAV:

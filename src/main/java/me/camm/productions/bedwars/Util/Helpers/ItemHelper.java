@@ -388,6 +388,9 @@ public class ItemHelper
             if (getNavigator(stack) != null)
                 return true;
 
+            if (isArmor(stack.getType()))
+                return true;
+
             return isPick(stack) || isAxe(stack) || (isSword(stack.getType()) && isWoodenSimple(stack.getType()));
         }
 
@@ -851,7 +854,7 @@ public class ItemHelper
 
     public static boolean isPlaceHolder(ItemCategory category)
     {
-        return category==NONE||category==NAV||category==SEPARATOR||category==TRACKER;
+        return category==NONE||category==NAV||category==SEPARATOR;
     }
 
     public static boolean isNavigator(ShopItem item){

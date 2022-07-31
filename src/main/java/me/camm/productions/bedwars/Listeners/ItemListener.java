@@ -127,7 +127,7 @@ public class ItemListener implements Listener
                     if (current.getRawPlayer().getLocation().distanceSquared(loc) > distanceSquared)
                         continue;
 
-                        if (current.getRawPlayer().getInventory().firstEmpty() != -1 &&
+                    if (current.getRawPlayer().getInventory().firstEmpty() != -1 &&
                                 (current.getIsAlive() && !current.getIsEliminated()))
                             current.getRawPlayer().getInventory().addItem(picked);
 
@@ -166,6 +166,7 @@ public class ItemListener implements Listener
         player inv.
          */
         if (ItemHelper.getNavigator(stack) != null) {
+
             event.getItemDrop().remove();
             return;
         }

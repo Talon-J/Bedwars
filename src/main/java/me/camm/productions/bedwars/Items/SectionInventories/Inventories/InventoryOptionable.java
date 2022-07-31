@@ -30,14 +30,18 @@ import java.util.*;
  * @author CAMM
  * This inventory models a tracker inventory for the player (where the player determines who to track)
  */
-public abstract class TeamOptionInventory extends CraftInventoryCustom implements IGameInventory
+public abstract class InventoryOptionable extends CraftInventoryCustom implements IGameInventory
 {
 
     protected final Map<String, BattleTeam> dictionary;
     protected static final int LENGTH = TeamColor.values().length;
     protected static final ItemStack AIR = new ItemStack(Material.AIR);
-    private static final int ROW = InventoryProperty.LARGE_ROW_TWO_START.getValue();
-    private static final ItemStack SEPARATOR = ItemHelper.createGlassPane(ItemCategory.SEPARATOR);
+    protected static final int ROW = InventoryProperty.LARGE_ROW_TWO_START.getValue();
+
+   protected static final ItemStack SEPARATOR = ItemHelper.createGlassPane(ItemCategory.SEPARATOR);
+
+
+
     protected static boolean inflated;
     protected final Arena arena;
 
@@ -48,13 +52,10 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
         inflated = false;
     }
 
-    public TeamOptionInventory(Arena arena) throws IllegalStateException {
+    public InventoryOptionable(Arena arena) {
         super(null, InventoryProperty.LARGE_SHOP_SIZE.getValue(), InventoryName.TRACKER.getTitle());
       dictionary = new HashMap<>();
       this.arena = arena;
-
-      if (SEPARATOR==null)
-          throw new IllegalStateException("Separators should not be null!");
 
 
         for (int slot = InventoryProperty.LARGE_ROW_THREE_START.getValue(); slot <= InventoryProperty.LARGE_ROW_THREE_END.getValue();slot++)
@@ -68,7 +69,7 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
 
     public void addEntry(@NotNull BattleTeam team){
         TeamColor color = team.getTeamColor();
-        dictionary.put(color.getChatColor()+color.getName(), team);
+        dictionary.put(color.format(), team);
 
     }
 
@@ -79,12 +80,12 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
 
             addEntry(next);
         }
-
     }
 
 
     public void removeEntry(@NotNull BattleTeam team){
         dictionary.remove(team.getTeamColor().getName());
+        updateInventory();
     }
 
     public void updateInventory(){
@@ -98,7 +99,7 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
                 BattleTeam team = iter.next();
 
                 /*
-                if the team is elim, then return
+                if the team is elim, then return here
                  */
 
 
@@ -106,7 +107,7 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
 
                 ItemStack trackStack = ItemHelper.createWool((byte)color.getValue());
                   ItemMeta meta = trackStack.getItemMeta();
-                  meta.setDisplayName(color.getChatColor()+color.getName());
+                  meta.setDisplayName(color.format());
                   trackStack.setItemMeta(meta);
                   setItem(slot+ROW, trackStack);
 
@@ -124,15 +125,17 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
     @Override
     public void operate(InventoryClickEvent event) {
 
-
         Map<UUID, BattlePlayer> players = arena.getPlayers();
        BattlePlayer battlePlayer = players.getOrDefault(event.getWhoClicked().getUniqueId(), null);
 
+       InventoryOperationHelper.handleDefaultRestrictions(event,arena);
        event.setCancelled(InventoryOperationHelper.handleClickAttempt(event, this));
+
 
        ItemStack clicked = event.getCurrentItem();
        if (ItemHelper.isItemInvalid(clicked))
            return;
+
 
 
        String name = clicked.getItemMeta().getDisplayName();
@@ -146,6 +149,7 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
             return;
 
         if (preference.isEliminated()) {
+            event.setCancelled(true);
             removeEntry(preference);
             return;
         }
@@ -160,7 +164,6 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
 
         if (InventoryOperationHelper.didTryToDragIn(event, this)) {
             event.setCancelled(true);
-
             return;
         }
         InventoryOperationHelper.handleDefaultRestrictions(event, arena);
@@ -168,6 +171,8 @@ public abstract class TeamOptionInventory extends CraftInventoryCustom implement
 
 
     protected abstract void handleResult(BattlePlayer initiation, BattleTeam picked);
+
+
 
 
 

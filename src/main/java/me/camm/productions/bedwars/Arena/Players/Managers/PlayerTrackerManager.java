@@ -45,7 +45,11 @@ public class PlayerTrackerManager implements Runnable{
     public void run() {
 
         try {
-            loop();
+            while (running) {
+                loop();
+                Thread.sleep(1000);
+            }
+
         }
         catch (InterruptedException ignored) {
         }
@@ -56,7 +60,7 @@ public class PlayerTrackerManager implements Runnable{
 
     public void loop() throws InterruptedException {
 
-       while (running) {
+
            if (trackingEntries.isEmpty()) {
                synchronized (lock) {
                    lock.wait();
@@ -91,7 +95,9 @@ public class PlayerTrackerManager implements Runnable{
                               " Distance: "+distance+"\"}",1,60,1);
                    }
                }
-           }
+
+
+
        }
     }
 
@@ -139,9 +145,4 @@ public class PlayerTrackerManager implements Runnable{
         resume();
     }
 
-    public void removeEntry(BattlePlayer player){
-        synchronized (trackingEntries) {
-            trackingEntries.remove(player);
-        }
-    }
 }

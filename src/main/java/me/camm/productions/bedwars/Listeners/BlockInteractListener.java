@@ -33,7 +33,7 @@ import static me.camm.productions.bedwars.Util.Locations.BlockRegisterType.*;
 
 
 
-/**
+/*
 This class listens for and handles interactions which involve blocks
 @author CAMM
  */
@@ -152,6 +152,11 @@ public class BlockInteractListener implements Listener
 
         if (broke.getIsEliminated() || (!broke.getIsAlive()))
         {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (block.getType() == Material.SPONGE) {
             event.setCancelled(true);
             return;
         }

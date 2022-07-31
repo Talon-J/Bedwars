@@ -67,7 +67,7 @@ public class BattlePlayer
     //The alive value is for when they are in spectator mode and about to respawn.
     private boolean isEliminated;
     private volatile boolean isAlive;
-    private boolean hasCompass;
+
 
     //The time the player has until next respawn.
     //Used by a player death counter and also for when bed destroyed while counting down.
@@ -154,7 +154,6 @@ public class BattlePlayer
         this.isEliminated = false;
         this.timeTillRespawn = 0;
         this.isAlive = true;
-        this.hasCompass = false;
 
         this.finals = 0;
         this.kills = 0;
@@ -289,6 +288,7 @@ public class BattlePlayer
          addAccessibleInventory(quickEditor);
          addAccessibleInventory(barManager.getEditor());
          addAccessibleInventory(team.getTeamInventory());
+         addAccessibleInventory(team.getTrackerInventory());
          addAccessibleInventory(arena.getChatInv());
          addAccessibleInventory(arena.getSelectionInv());
 
@@ -686,7 +686,7 @@ public class BattlePlayer
             barManager.set(ItemHelper.toSoldItem(axe.getItem(), this), getAxe().getItem(), player);
         }
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
-        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_ITEM,player);
 
         heal();
         equipArmor();
@@ -723,7 +723,7 @@ public class BattlePlayer
         heal();
         equipArmor();
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
-        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_ITEM,player);
     }
 
 
@@ -1177,13 +1177,7 @@ public class BattlePlayer
         return quickEditor;
     }
 
-    public boolean hasCompass(){
-        return hasCompass;
-    }
 
-    public void setHasCompass(boolean compass){
-        this.hasCompass = compass;
-    }
 
 
 }

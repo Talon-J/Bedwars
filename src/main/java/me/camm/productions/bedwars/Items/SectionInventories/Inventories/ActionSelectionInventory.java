@@ -3,6 +3,7 @@ package me.camm.productions.bedwars.Items.SectionInventories.Inventories;
 
 import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
+import me.camm.productions.bedwars.BedWars;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.ActionSelectionConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
@@ -15,6 +16,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Map;
 import java.util.UUID;
@@ -48,6 +50,8 @@ public class ActionSelectionInventory extends CraftInventoryCustom implements IG
     @Override
     public void operate(InventoryClickEvent event) {
 
+        System.out.println("act select");
+
         event.setCancelled(InventoryOperationHelper.handleClickAttempt(event, this));
         Map<UUID, BattlePlayer> players = arena.getPlayers();
 
@@ -74,13 +78,20 @@ public class ActionSelectionInventory extends CraftInventoryCustom implements IG
         if (current == null)
             return;
 
+
+
+        ///there is a bug related to InventoryClickEvents where if you click on an item, and that makes the plugin
+        //open another inventory for the player, if the event is NOT cancelled, then inventory click events
+        //will not fire for the player until they relog.
+        //see: https://bukkit.org/threads/inventoryclickevent-not-being-called.447616/
+        event.setCancelled(true);
+
         switch (current) {
             case CHAT:
                 raw.openInventory(chat);
                 break;
             case TRACKER:
                 raw.openInventory(tracker);
-
         }
 
 
