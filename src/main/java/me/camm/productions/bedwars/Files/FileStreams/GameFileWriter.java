@@ -71,7 +71,6 @@ public class GameFileWriter {
         {
 
             writer = new BufferedWriter(new FileWriter(file,true));
-            // System.out.println(values.size());
 
             for (String[] value : values) {
 

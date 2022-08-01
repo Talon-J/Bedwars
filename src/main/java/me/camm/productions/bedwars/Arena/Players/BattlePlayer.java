@@ -5,7 +5,6 @@ import me.camm.productions.bedwars.Arena.Players.Managers.HotbarManager;
 import me.camm.productions.bedwars.Arena.Players.Managers.PlayerInventoryManager;
 import me.camm.productions.bedwars.Arena.Players.Scoreboards.PlayerBoard;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
-import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Arena.Teams.TeamTitle;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.ChatOptionSelectionInventory;
@@ -56,7 +55,7 @@ public class BattlePlayer
 
     private final Arena arena;
     private volatile Player player;
-    private TeamColor teamImprint;
+
 
 
 
@@ -112,7 +111,6 @@ public class BattlePlayer
     private volatile int finals;
     private volatile int kills;
     private volatile int beds;
-    private int deaths;
 
 
 
@@ -149,7 +147,6 @@ public class BattlePlayer
 
         this.arena = arena;
         this.team = team;
-        teamImprint = team.getTeamColor();
         this.tracking = null;
 
         this.number = number;
@@ -164,7 +161,7 @@ public class BattlePlayer
         this.finals = 0;
         this.kills = 0;
         this.beds = 0;
-        this.deaths = 0;
+
 
 
         this.barManager = null;
@@ -228,10 +225,6 @@ public class BattlePlayer
 
     public void addAccessibleInventory(IGameInventory inventory){
         accessibleInventories.put(inventory.hashCode(), inventory);
-    }
-
-    public void setImprint(BattleTeam team){
-        this.teamImprint = team.getTeamColor();
     }
 
 
@@ -460,7 +453,6 @@ public class BattlePlayer
 
            //Adding the player to the new team.
            this.team.addPlayer(this);
-          setImprint(this.team);
 
            player.setScoreboard(arena.getHealthBoard());
            board.switchPrimaryBuffer();
@@ -572,7 +564,7 @@ public class BattlePlayer
 
 
             tracking = null;
-            deaths ++;
+
 
 
         }
@@ -1013,16 +1005,6 @@ public class BattlePlayer
         this.kills = newKills;
     }
 
-    public void printStatistics(){
-        player.sendMessage("=== Statistics ===");
-        player.sendMessage("Played for Team:"+teamImprint.getName());
-        player.sendMessage("Kills:"+kills);
-        player.sendMessage("Finals:"+finals);
-        player.sendMessage("Beds broken:"+beds);
-        player.sendMessage("Deaths:"+deaths);
-
-    }
-
 
 
     //////////////////////////////////////////
@@ -1058,10 +1040,9 @@ public class BattlePlayer
     //updates the shop to display the next upgrade after the axe.
     public synchronized void setAxeUpwards(TieredItem axe) {
 
-        System.out.println("Param: "+axe);
+
         this.axe = axe;
         TieredItem upgrade = ItemHelper.getNextTier(axe);
-        System.out.println("next tier: "+upgrade);
         shopManager.replaceItem(axe.getItem(),upgrade == null? axe.getItem() : upgrade.getItem());
     }
 

@@ -57,7 +57,6 @@ public final class BedWars extends JavaPlugin
         plugin = this;
         ChatSender sender = ChatSender.getInstance();
 
-      //  System.out.println(ShopItem.EMPTY_SLOT.category);
 
 
 
@@ -71,7 +70,7 @@ public final class BedWars extends JavaPlugin
            fileCreator.createFiles();
 
            replaceClass(gameDragon, DRAGON_NAME, DRAGON_ID);
-           sender.sendConsoleMessage("Registering custom ender dragon...", Level.INFO);
+           sender.sendConsoleMessage("Registered custom ender dragon...", Level.INFO);
 
            initialization = new GameIntializer(this);
 
@@ -218,21 +217,4 @@ public final class BedWars extends JavaPlugin
             }
         });
     }
-
-
-    /*
-TODO: (In the very near future)
- - add tracker shop & quick comms
- - Fire still spreads! <-- bad (Doesn't fade or burn out though)
-  + Also, might wanna make sure that you don't have fire floating around on air
-
-
- NOTE: The check for opposition in the CLASS "Setup" is currently ----   ---- disabled for testing purposes.
-
-
-active debugging changes:
- */
-
-
-
 }

@@ -13,7 +13,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 
 /**
- * TODO unfinished. Need to refactor.
+ *
  * @author CAMM
  * Helper for creating explosion particles.
  */

@@ -140,8 +140,7 @@ public class GameRunner
         playerLogListener = new LogListener(arena,this,keepers);
         plugin.getServer().getPluginManager().registerEvents(playerLogListener,plugin);
 
-       //giving permissions to the players
-        //todo maybe read from files to see who gets perms instead of just giving everyone perms?
+
         addPermissions();
 
 
@@ -535,7 +534,7 @@ as a string.
             raw.setFlying(true);
             packetHandler.removePlayer(raw);
             player.removeInvisibilityEffect();
-            player.printStatistics();
+
 
 
 

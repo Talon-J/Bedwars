@@ -21,18 +21,6 @@ import static java.lang.Double.NaN;
  * Models a class for calculating velocity to apply to entities
  *
  *
- * todo:
- *
- * tnt is fine, but double tnt jumping is not.
- * tnt timing: good. 49 tick
- *
- *
- * double jumping:
- * 2nd tnt needs launch you higher, very slightly. suggest getting others to test better since kiwi not familiar.
- *
- *
- *
- *
  */
 public class VelocityComponent {
     private final EntityExplodeEvent event;
@@ -176,17 +164,13 @@ public class VelocityComponent {
 
         if (type.contains("tnt")) {
             totalMagnitude = getTNTProjectileMagnitude(totalDist);
-            System.out.println("tnt is projectile");
         }
         else {
             totalMagnitude = isFireball? getFireballVectorMagnitude(totalDist) : getTNTVectorMagnitude(totalDist);
 
         }
 
-        System.out.println("dist:"+totalDist+"  used fbc: "+isFireball);
-        System.out.println("total mag:"+totalMagnitude);
-        System.out.println("exp loc: "+explosionLoc);
-        System.out.println("targ loc: "+entityLoc);
+
 
         if (totalMagnitude == 0)
             return;

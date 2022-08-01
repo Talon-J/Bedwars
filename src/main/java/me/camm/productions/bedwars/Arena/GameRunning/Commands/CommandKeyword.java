@@ -19,6 +19,7 @@ public enum CommandKeyword
     private final String perm;
 
 
+    //constructor
     CommandKeyword(String word, String perm)
     {
         this.word = word;
