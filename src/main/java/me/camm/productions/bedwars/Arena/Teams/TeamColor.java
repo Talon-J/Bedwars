@@ -69,6 +69,6 @@ public enum TeamColor
     }
 
     public String format(){
-        return getColor()+getName();
+        return getChatColor()+getName();
     }
 }

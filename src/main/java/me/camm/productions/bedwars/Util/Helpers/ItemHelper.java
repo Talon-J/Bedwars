@@ -185,7 +185,7 @@ public class ItemHelper
                 if (bought == null)
                     return;
 
-                if (playerInv.firstEmpty()==-1) {
+                if (!roomAvailable(bought, playerInv)) {
                     player.sendMessage(ChatColor.RED+"Can't do an operation with a full inventory!");
                     return;
                 }
@@ -213,13 +213,39 @@ public class ItemHelper
             default:
             {
 
-                ItemStack boughtTool = toSoldItem(item, player);
+                ///the item could be a tiered item, and a tool
+                ItemStack boughtItem = toSoldItem(item, player);
+                TieredItem associate = isTieredItem(item);
+                TieredItem previousTier = getPreviousTier(associate);
 
-                if (playerInv.firstEmpty()==-1)
-                {
-                    player.sendMessage(ChatColor.RED+"Can't do an operation with an inventory where swapping room is not present!");
-                    return;
+
+                if (previousTier == null && associate == null) {
+                    if (!roomAvailable(boughtItem, playerInv))
+                    {
+                        player.sendMessage(ChatColor.RED+"Inventory is full!");
+                        return;
+                    }
                 }
+                else {
+
+                    if (previousTier == null) {
+                        if (playerInv.firstEmpty() == -1) {
+                            player.sendMessage(ChatColor.RED+"Inventory is full!");
+                            return;
+                        }
+                    } else {
+
+
+                        ItemStack previousTool = toSoldItem(previousTier.getItem(), player);
+                        if (!playerInv.contains(previousTool)) {
+                            player.sendMessage(ChatColor.RED + "You do not have the previous tier of the tool in your inventory!");
+                            return;
+                        }
+                    }
+                }
+
+
+
 
                 if (didNotPay(player, item, isInflated))
                     return;
@@ -244,11 +270,40 @@ public class ItemHelper
                     player.setShears();
                 }
 
-                manager.set(boughtTool, item, player.getRawPlayer(),event);
+                manager.set(boughtItem, item, player.getRawPlayer(),event);
                }
             }
 
             player.sendMessage(ChatColor.GREEN+"You bought "+item.format());
+        }
+
+
+        /*
+        this method checks to see if there is room in an inventory
+
+        If there is an empty space: true
+        Else,
+        we check all items in the inventory to see if there are stacks which are similar
+        if there are similar stacks, we check if there is a stack which can hold at least the stack provided.
+
+         */
+        public static boolean roomAvailable(ItemStack stack, Inventory inv){
+            if (inv.firstEmpty() != -1)
+                return true;
+
+            for (ItemStack residing: inv.getContents()) {
+                if (residing.isSimilar(stack)) {
+                    int amountResiding = residing.getAmount();
+                    int amountStack = stack.getAmount();
+
+                    int max = stack.getMaxStackSize();
+
+                    if (amountResiding + amountStack <= max)
+                        return true;
+                }
+            }
+
+            return false;
         }
 
 
@@ -482,6 +537,7 @@ public class ItemHelper
             return null;
 
         ItemStack stack = new ItemStack(item.sellMaterial,item.sellAmount);
+        stack = setUnbreakable(stack);
 
         switch (item)
         {
@@ -490,25 +546,25 @@ public class ItemHelper
             case WOOD_AXE:
             case WOODEN_PICKAXE:
             case STONE_AXE:
-                stack = enchant(setUnbreakable(stack),EFFICIENCY_ONE);
+                stack = enchant(stack,EFFICIENCY_ONE);
                 break;
 
 
             //eff 2
             case IRON_PICKAXE:
             case IRON_AXE:
-                stack = enchant(setUnbreakable(stack),EFFICIENCY_TWO);
+                stack = enchant(stack,EFFICIENCY_TWO);
                 break;
 
             //eff 3
             case DIAMOND_PICKAXE:
             case DIAMOND_AXE:
-                stack = enchant(setUnbreakable(stack),EFFICIENCY_THREE);
+                stack = enchant(stack,EFFICIENCY_THREE);
                 break;
 
             //eff + sharp
             case GOLD_PICKAXE:
-                stack = enchant(setUnbreakable(stack),EFFICIENCY_THREE);
+                stack = enchant(stack,EFFICIENCY_THREE);
                 stack = enchant(stack, SHARPNESS_TWO);
                 break;
 
@@ -940,6 +996,17 @@ public class ItemHelper
     }
 
 
+    public static ItemStack addName(ItemStack item, String name) {
+        if (isItemInvalid(item))
+            return item;
+
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+
     public static TieredItem isTieredItem(ShopItem item)
     {
         for (TieredItem tier: tieredItemList)
@@ -1146,6 +1213,9 @@ public class ItemHelper
 
     public static TieredItem getPreviousTier(TieredItem current)
     {
+        if (current == null)
+            return null;
+
         for (TieredItem item: tieredItemList)
         {
             if ((item.getCategory()==current.getCategory()) && (item.getIndex()==(current.getIndex()-1)) )
@@ -1335,14 +1405,6 @@ public class ItemHelper
     {
         Player player = current.getRawPlayer();
         ItemStack airHold = new ItemStack(Material.AIR, 1);
-
-        if (player.getInventory().firstEmpty()==-1) //if player has space in inv
-        {
-            playSound(false,player);
-            player.sendMessage(ChatColor.RED+"Your inventory is full!");
-            player.closeInventory();
-            return false;
-        }
 
         if (!player.getInventory().contains(priceMaterial, price)) //if the inv contains the price
         {

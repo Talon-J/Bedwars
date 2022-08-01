@@ -21,6 +21,7 @@ import net.minecraft.server.v1_8_R3.Tuple;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventory;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryCrafting;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
@@ -222,6 +223,10 @@ public class InventoryOperationHelper
 
         IGameInventory customInv = accessibleInvs.getOrDefault(topInv.hashCode(), null);
         if (customInv == null) {
+
+            ////debug here for shift clicks and collection
+
+
             handleDefaultItemRestrictions(clickedItem, cursorItem, event, topInv, playerInv);
             return;
         }
@@ -236,6 +241,7 @@ public class InventoryOperationHelper
         }
 
         if (handleClickAttempt(event, topInv)) {
+
             event.setCancelled(true);
         }
 
@@ -253,6 +259,13 @@ public class InventoryOperationHelper
         Class<? extends Inventory> clazz = topInv.getClass();
         if (!clazz.equals(CraftInventory.class) && InventoryOperationHelper.handleClickAttempt(event,topInv))
         {
+
+            InventoryAction type = event.getAction();
+            if (clazz.equals(CraftInventoryCrafting.class) && (event.isShiftClick() || type == InventoryAction.COLLECT_TO_CURSOR)) {
+                return;
+            }
+
+
             event.setCancelled(true);
             return;
         }

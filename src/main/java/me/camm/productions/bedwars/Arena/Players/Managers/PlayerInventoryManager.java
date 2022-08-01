@@ -7,6 +7,7 @@ import me.camm.productions.bedwars.Items.SectionInventories.Inventories.*;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.ShopInventory;
 import me.camm.productions.bedwars.Util.DataSets.ShopItemSet;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
+import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -38,6 +39,7 @@ public class PlayerInventoryManager
     private static RangedSectionInventory rangedSection;
     private static UtilitySectionInventory utilitySection;
 
+
     private ShopInventory[] values;
 
 
@@ -52,6 +54,7 @@ public class PlayerInventoryManager
     {
 
         this.arena = arena;
+        this.owner = owner;
 
         armorSection = new ArmorSectionInventory(isInflated, arena);
         quickBuy = new QuickBuyInventory(isInflated,quickBuyConfiguration, arena);
@@ -82,7 +85,8 @@ public class PlayerInventoryManager
                 meleeSection,
                 potionSection,
                 rangedSection,
-                utilitySection};
+                utilitySection,
+      };
 
         this.isInflated = isInflated;
 
@@ -123,8 +127,13 @@ public class PlayerInventoryManager
          */
     private void searchAndReplace(Inventory inv, ShopItem toReplace, ShopItem replacement)
     {
-        if (owner == null)
+
+        System.out.println("replacing");
+
+        if (owner == null) {
+            System.out.println("owner null");
             return;
+        }
 
 
         ItemStack toBeSet = ItemHelper.toDisplayItem(replacement, isInflated);
@@ -135,6 +144,12 @@ public class PlayerInventoryManager
             ItemStack residing = inv.getItem(i);
             if (ItemHelper.isItemInvalid(residing))
                 continue;
+
+
+            if (residing.getType() == Material.WOOD_AXE) {
+                System.out.println("wood axe");
+                System.out.println("similar: "+residing.isSimilar(toBeReplaced));
+            }
 
             //Enchantments can change the name, so don't use displayName().equalsIgnoreCase()...
             if (residing.isSimilar(toBeReplaced)) {

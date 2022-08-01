@@ -132,6 +132,18 @@ public class ItemUseListener implements Listener
     }
 
 
+
+    @EventHandler
+    public void onBedEnter(PlayerBedEnterEvent event){
+
+        BattlePlayer player = arena.getPlayers().getOrDefault(event.getPlayer().getUniqueId(),null);
+        if (player == null)
+            return;
+
+        event.setCancelled(true);
+    }
+
+
     @EventHandler
     public void onItemInteract(PlayerInteractEvent event) {
 

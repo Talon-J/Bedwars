@@ -200,7 +200,7 @@ public class GameRunner
         if (maxPlayers>2)
             isInflated = true;
 
-        InventoryOptionable.setInflated(isInflated);
+
 
         //adding the packet handler for the invisibility, etc
         this.packetHandler = new PacketHandler(keepers, arena);
@@ -500,6 +500,7 @@ as a string.
         setRunning(false);
         npcManager.setRunning(false);
         boundaryLoader.stop();
+        trackerManager.setRunning(false);
 
         for (BattleTeam team : teams) {
             team.getForge().disableForge();

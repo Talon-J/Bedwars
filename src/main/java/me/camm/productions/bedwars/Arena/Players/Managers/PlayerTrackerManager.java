@@ -46,7 +46,53 @@ public class PlayerTrackerManager implements Runnable{
 
         try {
             while (running) {
-                loop();
+
+
+
+                if (trackingEntries.isEmpty()) {
+                    synchronized (lock) {
+                        lock.wait();
+                    }
+                }
+
+
+                    Iterator<BattlePlayer> iter = trackingEntries.iterator();
+
+
+                    while (iter.hasNext()) {
+                        BattlePlayer next = iter.next();
+
+                        BattleTeam tracking = next.getTracking();
+                        if (tracking == null) {
+                            iter.remove();
+                            continue;
+
+                        }
+
+                        BattlePlayer target = getTarget(tracking, next);
+
+                        if (target == null) {
+                            next.sendActionbarTitle( "{\"text\":\""+ChatColor.GREEN+"Tracking: None\"}");
+                        }
+                        else  {
+
+                            Player rawTarget = target.getRawPlayer();
+                            Player raw = next.getRawPlayer();
+                            double distance = raw.getLocation().distance(rawTarget.getLocation());
+                            distance *= 100;
+                            distance = Math.round(distance);
+                            distance /= 100;
+
+                            raw.setCompassTarget(rawTarget.getLocation());
+                            next.sendActionbarTitle("{\"text\":\""+ChatColor.GREEN+
+                                    "Tracking: "+target.getRawPlayer().getName()+
+                                    " Distance: "+distance+"\"}");
+                        }
+                    }
+
+
+
+
                 Thread.sleep(1000);
             }
 
@@ -58,48 +104,6 @@ public class PlayerTrackerManager implements Runnable{
     }
 
 
-    public void loop() throws InterruptedException {
-
-
-           if (trackingEntries.isEmpty()) {
-               synchronized (lock) {
-                   lock.wait();
-               }
-
-
-               Iterator<BattlePlayer> iter = trackingEntries.iterator();
-               while (iter.hasNext()) {
-                   BattlePlayer next = iter.next();
-
-                  BattleTeam tracking = next.getTracking();
-                   if (tracking == null) {
-                       iter.remove();
-                       continue;
-
-                   }
-
-                  BattlePlayer target = getTarget(tracking, next);
-
-                   if (target == null) {
-                       next.sendTitle(null, "{\"text\":\""+ChatColor.GREEN+"Tracking: None\"}",1,60,1);
-                   }
-                   else  {
-
-                       Player rawTarget = target.getRawPlayer();
-                       Player raw = next.getRawPlayer();
-                      double distance = raw.getLocation().distance(rawTarget.getLocation());
-
-                      raw.setCompassTarget(rawTarget.getLocation());
-                      next.sendTitle(null,"{\"text\":\""+ChatColor.GREEN+
-                              "Tracking: "+target.getRawPlayer().getName()+
-                              " Distance: "+distance+"\"}",1,60,1);
-                   }
-               }
-
-
-
-       }
-    }
 
 
 
@@ -132,12 +136,14 @@ public class PlayerTrackerManager implements Runnable{
 
     public void resume(){
         synchronized (lock) {
+            System.out.println("notify");
             lock.notify();
         }
     }
 
     public void addEntry(BattlePlayer player){
         synchronized (trackingEntries) {
+            System.out.println("adding player: "+player.getRawPlayer().getName());
             trackingEntries.add(player);
 
         }

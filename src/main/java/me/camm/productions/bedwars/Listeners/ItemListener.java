@@ -11,6 +11,7 @@ import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import org.bukkit.Location;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -157,6 +158,11 @@ public class ItemListener implements Listener
         ShopItem item = ItemHelper.getAssociate(stack);
 
         if ( (ItemHelper.isAxe(stack) || ItemHelper.isPick(stack))) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (stack.getType() == Material.COMPASS || stack.getType() == Material.SHEARS) {
             event.setCancelled(true);
             return;
         }

@@ -16,7 +16,7 @@ public enum ContributorList
     MORALE(new String[] {"Emotional Support:","Lachi_molala","Marcaroni_","MrTeavee"}),
     SPECIAL(new String[] {"Special thanks:","Buster_Buckaroo, KiwiGod888 - For a private Hypixel BedWars match.","Lachi_molala - For lending a Minecraft account to help with dedicated testing."}),
     PLAY_TEST(new String[]{"Play Testing:","CAMM_H87","ChristmasPotato","J4CKTH3REAPER","KiwiGod888","MaidTheMage","Marcaroni_"}),
-    ORIGIN(new String[] {"\"No matter how hard something is, keep up with the persistence; you can do it. I originally started the plugin by myself, getting assistance from Asdf_Noob about 1.3 years into the making. We're coding on our free time, and often are quite busy.",
+    ORIGIN(new String[] {"\"No matter how hard something is, keep up with the persistence; you can do it. I originally started the plugin by myself, just after finishing a java course. I'm coding on my free time, and often am quite busy.",
             " Bedwars is originally made by the Hypixel Team. This plugin is for private educational and developmental purposes only, not for commercial use.","Idea for the challenge was initially from MrTeavee and KiwiGod888."}),
 
 

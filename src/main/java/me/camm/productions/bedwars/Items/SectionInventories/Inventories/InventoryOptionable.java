@@ -6,9 +6,10 @@ import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamColor;
+import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.ResourceConfig;
+import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamOptionConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
-import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
 
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
@@ -28,7 +29,8 @@ import java.util.*;
 
 /*
  * @author CAMM
- * This inventory models a tracker inventory for the player (where the player determines who to track)
+ * This inventory models an inventory for players where they are given options for tracker, or
+ * for quick chat, where they choose resources or teams for a message
  */
 public abstract class InventoryOptionable extends CraftInventoryCustom implements IGameInventory
 {
@@ -38,34 +40,29 @@ public abstract class InventoryOptionable extends CraftInventoryCustom implement
     protected static final ItemStack AIR = new ItemStack(Material.AIR);
     protected static final int ROW = InventoryProperty.LARGE_ROW_TWO_START.getValue();
 
-   protected static final ItemStack SEPARATOR = ItemHelper.createGlassPane(ItemCategory.SEPARATOR);
 
 
 
-    protected static boolean inflated;
     protected final Arena arena;
 
 
 
 
-    static {
-        inflated = false;
-    }
-
-    public InventoryOptionable(Arena arena) {
-        super(null, InventoryProperty.LARGE_SHOP_SIZE.getValue(), InventoryName.TRACKER.getTitle());
+    public InventoryOptionable(Arena arena, String title) {
+        super(null, InventoryProperty.LARGE_SHOP_SIZE.getValue(), title);
       dictionary = new HashMap<>();
       this.arena = arena;
 
 
-        for (int slot = InventoryProperty.LARGE_ROW_THREE_START.getValue(); slot <= InventoryProperty.LARGE_ROW_THREE_END.getValue();slot++)
-            setItem(slot, SEPARATOR);
+      for (TeamOptionConfig config: TeamOptionConfig.values()){
+          for (int slot: config.getSlots()) {
+              setItem(slot, config.create());
+          }
+      }
     }
 
 
-    public static void setInflated(boolean inf){
-        inflated = inf;
-    }
+
 
     public void addEntry(@NotNull BattleTeam team){
         TeamColor color = team.getTeamColor();
@@ -84,6 +81,7 @@ public abstract class InventoryOptionable extends CraftInventoryCustom implement
 
 
     public void removeEntry(@NotNull BattleTeam team){
+
         dictionary.remove(team.getTeamColor().getName());
         updateInventory();
     }
@@ -91,17 +89,27 @@ public abstract class InventoryOptionable extends CraftInventoryCustom implement
     public void updateInventory(){
         Iterator<BattleTeam> iter = dictionary.values().iterator();
 
+
+
         int slot = 1;
+
+        //clear
+        while (slot < LENGTH) {
+            setItem(slot+ROW,AIR);
+            slot++;
+        }
+
+        slot = 1;
+
+
         while (slot < LENGTH && iter.hasNext()) {
 
-            setItem(slot+ROW,AIR);
+
 
                 BattleTeam team = iter.next();
-
-                /*
-                if the team is elim, then return here
-                 */
-
+                if (team.isEliminated()) {
+                    continue;
+                }
 
                 TeamColor color = team.getTeamColor();
 
@@ -129,7 +137,9 @@ public abstract class InventoryOptionable extends CraftInventoryCustom implement
        BattlePlayer battlePlayer = players.getOrDefault(event.getWhoClicked().getUniqueId(), null);
 
        InventoryOperationHelper.handleDefaultRestrictions(event,arena);
-       event.setCancelled(InventoryOperationHelper.handleClickAttempt(event, this));
+       if (InventoryOperationHelper.handleClickAttempt(event, this))
+           event.setCancelled(true);
+
 
 
        ItemStack clicked = event.getCurrentItem();
@@ -138,21 +148,37 @@ public abstract class InventoryOptionable extends CraftInventoryCustom implement
 
 
 
+       if (!event.getClickedInventory().equals(this)) {
+           return;
+       }
+
+        event.setCancelled(true);
+
+
        String name = clicked.getItemMeta().getDisplayName();
+
        if (name == null)
            return;
 
 
        BattleTeam preference = dictionary.getOrDefault(name, null);
 
-        if (preference == null)
+
+        if (preference == null) {
+
+            if (clicked.equals(TeamOptionConfig.RETURN.create())) {
+                event.setCancelled(true);
+                battlePlayer.getRawPlayer().openInventory((Inventory)arena.getSelectionInv());
+            }
             return;
+        }
+
 
         if (preference.isEliminated()) {
-            event.setCancelled(true);
             removeEntry(preference);
             return;
         }
+
 
         handleResult(battlePlayer, preference);
 
@@ -169,14 +195,8 @@ public abstract class InventoryOptionable extends CraftInventoryCustom implement
         InventoryOperationHelper.handleDefaultRestrictions(event, arena);
     }
 
-
-    protected abstract void handleResult(BattlePlayer initiation, BattleTeam picked);
-
-
-
-
-
-
+    protected abstract void handleResult(BattlePlayer player, BattleTeam preference);
+    protected abstract void handleResult(BattlePlayer player, ResourceConfig config);
 
 
 

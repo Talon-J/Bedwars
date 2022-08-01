@@ -3,15 +3,20 @@ package me.camm.productions.bedwars.Items.SectionInventories.Inventories;
 import com.google.common.collect.HashBasedTable;
 import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
+import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.QuickChatConfig;
+import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamOptionConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
 import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
+import me.camm.productions.bedwars.Util.PacketSound;
 import net.minecraft.server.v1_8_R3.Tuple;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftInventoryCustom;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -52,6 +57,8 @@ public class QuickChatInventory extends CraftInventoryCustom implements IGameInv
             setItem(config.getSlot(), stack);
         }
 
+        setItem(TeamOptionConfig.RETURN.getSlots()[0],TeamOptionConfig.RETURN.create());
+
     }
 
     public static void complete(UUID id, String completion) {
@@ -63,13 +70,25 @@ public class QuickChatInventory extends CraftInventoryCustom implements IGameInv
         BattlePlayer player = set.b();
         String finish = set.a();
 
-        player.getTeam().sendTeamMessage("complete test  - "+finish + completion);
+        BattleTeam team = player.getTeam();
+        Player raw = player.getRawPlayer();
+       raw.closeInventory();
+        team.sendTeamMessage(team.getTeamColor().getChatColor()+raw.getName()+
+                ChatColor.GOLD+" says "+ finish + completion);
+
+        player.getTeam().sendTeamSoundPacket(PacketSound.DING);
 
     }
 
 
     private void send(BattlePlayer player, String message){
-        player.getTeam().sendTeamMessage("test - "+message);
+        BattleTeam team = player.getTeam();
+        Player raw = player.getRawPlayer();
+        raw.closeInventory();
+        team.sendTeamMessage(team.getTeamColor().getChatColor()+raw.getName()+
+                ChatColor.GOLD+" says "+message);
+
+        player.getTeam().sendTeamSoundPacket(PacketSound.DING);
     }
 
 
@@ -115,29 +134,40 @@ public class QuickChatInventory extends CraftInventoryCustom implements IGameInv
         if (name == null)
             return;
 
-        if (!configItems.contains(name, type))
+        if (!configItems.contains(name, type)) {
+
+            if (clicked.equals(TeamOptionConfig.RETURN.create())) {
+                event.setCancelled(true);
+                battlePlayer.getRawPlayer().openInventory((Inventory)arena.getSelectionInv());
+            }
             return;
+        }
         ///check if it is a return to selection inv
 
 
         QuickChatConfig option = configItems.get(name, type);
 
-        if (option.allowsOptions()) {
 
+        event.setCancelled(true);
+
+
+        if (option.allowsOptions()) {
             add(battlePlayer,option.getMessage());
-            event.setCancelled(true);
+
             //open an inventory here
 
+            ChatOptionSelectionInventory optionInv = battlePlayer.getChatOptionInv();
             if (option.isTeamRelated()) {
+               optionInv.loadTeams();
                 ///populate with team stuff
-                //bp.getOption().populateTeams()
             }
             else  {
                 //populate with resource stuff
-                //bp.getOption().populateResources()
+               optionInv.loadResources();
             }
 
-            //bp.openInv()...
+
+            battlePlayer.getRawPlayer().openInventory(optionInv);
 
             return;
         }

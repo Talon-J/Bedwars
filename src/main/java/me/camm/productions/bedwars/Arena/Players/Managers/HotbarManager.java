@@ -240,11 +240,6 @@ public class HotbarManager
                 category==ARMOR||!player.isOnline())
             return;
 
-        // checks should be made prior to calling this method, since we are selling something to them.
-        if (playerInv.firstEmpty()==-1) {
-            throw new IllegalStateException("Player inventory is full!");
-        }
-
         //check if the item sold is an item with tiers.
         TieredItem enumTiered = ItemHelper.isTieredItem(enumItem);
 
