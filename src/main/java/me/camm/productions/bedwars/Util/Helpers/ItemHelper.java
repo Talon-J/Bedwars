@@ -863,15 +863,6 @@ public class ItemHelper
         return mat.name().toLowerCase().contains("sword");
     }
 
-    public static boolean isSword(ItemStack stack){
-
-        if (isItemInvalid(stack))
-            return false;
-
-        return isSword(stack.getType());
-
-    }
-
 
     public static int countSwords(Inventory inv){
         int swords = 0;

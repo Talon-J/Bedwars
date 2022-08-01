@@ -153,10 +153,10 @@ public class CommandProcessor {
             throw getPermException(START);
 
         if (runner==null)
-            throw new StateException("The arena is not set up!");
+            throw new StateException(ChatColor.RED+"The arena is not set up!");
 
         if (runner.isRunning())
-            throw new StateException("The game is already running!");
+            throw new StateException(ChatColor.RED+"The game is already running!");
 
 
         Collection<BattleTeam> values = runner.getArena().getTeams().values();
@@ -172,10 +172,10 @@ public class CommandProcessor {
 
         //disabled for testing only
 
-           //  if (!(notOpposed<2)) //game can start b/c there are at least 2 teams
+             if (!(notOpposed<2)) //game can start b/c there are at least 2 teams
                    runner.prepareAndStart();
-            //    else
-            //        throw new StateException(ChatColor.RED+"There must be opposition for a game to start!");
+                else
+                    throw new StateException(ChatColor.RED+"There must be opposition for a game to start!");
 
     }
 
@@ -213,13 +213,13 @@ public class CommandProcessor {
             throw getPermException(REGISTER);
 
         if (runner==null)
-            throw new StateException("The arena is not setup!");
+            throw new StateException(ChatColor.RED+"The arena is not setup!");
 
         if (runner.getArena().isRegistering())
-            throw new StateException("The arena is still in the process of registering zones!");
+            throw new StateException(ChatColor.RED+"The arena is still in the process of registering zones!");
 
         if (runner.isRunning())
-            throw new StateException("The game is running! Wait for it to finish first!");
+            throw new StateException(ChatColor.RED+"The game is running! Wait for it to finish first!");
 
         sender.openInventory((Inventory)runner.getJoinInventory());
     }
@@ -241,11 +241,11 @@ public class CommandProcessor {
             throw getPermException(UNREGISTER);
 
         if (runner == null) {
-            throw new StateException("The arena is not set up!");
+            throw new StateException(ChatColor.RED+"The arena is not set up!");
         }
 
         if (runner.isRunning()){
-            throw new StateException("The game is running! You can't unregister now!");
+            throw new StateException(ChatColor.RED+"The game is running! You can't unregister now!");
         }
 
          runner.unregisterPlayer(p);
@@ -269,11 +269,11 @@ public class CommandProcessor {
         Plugin p = BedWars.getPlugin();
         PluginCommand command = p.getServer().getPluginCommand(word.getWord());
         if (command == null)
-            return new PermissionException("You have no permission!");
+            return new PermissionException(ChatColor.RED+"You have no permission!");
 
 
         String permMessage = command.getPermissionMessage();
-        return new PermissionException(permMessage == null ? "You have no permission!": permMessage);
+        return new PermissionException(permMessage == null ? ChatColor.RED+"You have no permission!": permMessage);
 
     }
 
