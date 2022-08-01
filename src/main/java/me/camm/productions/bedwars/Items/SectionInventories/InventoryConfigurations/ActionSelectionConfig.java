@@ -6,11 +6,11 @@ import org.bukkit.Material;
 public enum ActionSelectionConfig {
 
     TRACKER(15, Material.COMPASS, ChatColor.WHITE+"Tracker"),
-    CHAT(11, Material.FEATHER, ChatColor.WHITE+"Quick Chat");
+    CHAT(11, Material.EMERALD, ChatColor.WHITE+"Quick Chat");
 
-    private int slot;
-    private Material mat;
-    private String name;
+    private final int slot;
+    private final Material mat;
+    private final String name;
 
     ActionSelectionConfig(int slot, Material mat, String name) {
 

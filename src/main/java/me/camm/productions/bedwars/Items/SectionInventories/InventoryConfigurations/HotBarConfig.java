@@ -22,7 +22,8 @@ public enum HotBarConfig
     RANGED(ShopItem.RANGED_NAV.sellMaterial,ShopItem.RANGED_NAV.name, ItemCategory.RANGED, new int[]{InventoryProperty.LARGE_ROW_THREE_START.getValue()+4}),
     POTION(ShopItem.POTIONS_NAV.sellMaterial,ShopItem.POTIONS_NAV.name, ItemCategory.POTION, new int[]{InventoryProperty.LARGE_ROW_THREE_START.getValue()+5}),
     UTILITY(ShopItem.UTILITY_NAV.sellMaterial,ShopItem.UTILITY_NAV.name, ItemCategory.UTILITY, new int[]{InventoryProperty.LARGE_ROW_THREE_START.getValue()+6}),
-    TRACKER(ShopItem.TRACKER_NAV.sellMaterial,ShopItem.TRACKER_NAV.name, ItemCategory.TRACKER,new int[]{InventoryProperty.LARGE_ROW_THREE_START.getValue()+7});
+    TRACKER(ShopItem.TRACKER_ITEM.sellMaterial, ShopItem.TRACKER_ITEM.name, ItemCategory.TRACKER,new int[]{InventoryProperty.LARGE_ROW_THREE_START.getValue()+7})
+    ;
 
     private final Material mat;
     private final String name;

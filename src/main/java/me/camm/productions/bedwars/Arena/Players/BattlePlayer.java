@@ -8,6 +8,7 @@ import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Arena.Teams.TeamTitle;
 import me.camm.productions.bedwars.Items.ItemDatabases.ItemCategory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.ChatOptionSelectionInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.Inventories.QuickBuyEditorInventory;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Listeners.PacketHandler;
@@ -58,6 +59,7 @@ public class BattlePlayer
     private TeamColor teamImprint;
 
 
+
     private BattleTeam tracking;
 
     //system time of when they last drank milk
@@ -67,7 +69,7 @@ public class BattlePlayer
     //The alive value is for when they are in spectator mode and about to respawn.
     private boolean isEliminated;
     private volatile boolean isAlive;
-    private boolean hasCompass;
+
 
     //The time the player has until next respawn.
     //Used by a player death counter and also for when bed destroyed while counting down.
@@ -81,6 +83,7 @@ public class BattlePlayer
     private volatile int timeTillRespawn;
 
 
+
     //not a battle team. This team is for their name color and visibility
     //to other players
     private Team playerTeam;
@@ -89,6 +92,7 @@ public class BattlePlayer
     //Managers for their hotbar and their quickbuy
     private HotbarManager barManager;
     private PlayerInventoryManager shopManager;
+    private ChatOptionSelectionInventory chatOptionInv;
 
 
     //Shopkeepers to send to them.
@@ -154,7 +158,8 @@ public class BattlePlayer
         this.isEliminated = false;
         this.timeTillRespawn = 0;
         this.isAlive = true;
-        this.hasCompass = false;
+
+
 
         this.finals = 0;
         this.kills = 0;
@@ -285,12 +290,15 @@ public class BattlePlayer
         Arrays.stream(shopManager.getShopInventories()).forEach(inv -> accessibleInventories.put(inv.hashCode(), inv));
 
          quickEditor = new QuickBuyEditorInventory(this);
+         chatOptionInv = new ChatOptionSelectionInventory(arena, this);
 
          addAccessibleInventory(quickEditor);
          addAccessibleInventory(barManager.getEditor());
          addAccessibleInventory(team.getTeamInventory());
+         addAccessibleInventory(team.getTrackerInventory());
          addAccessibleInventory(arena.getChatInv());
          addAccessibleInventory(arena.getSelectionInv());
+         addAccessibleInventory(chatOptionInv);
 
     }
 
@@ -492,6 +500,19 @@ public class BattlePlayer
     }
 
 
+    public void sendActionbarTitle(String title) {
+        try {
+            IChatBaseComponent component = IChatBaseComponent.ChatSerializer.a(title);
+            PacketPlayOutChat chat = new PacketPlayOutChat(component, (byte)2);
+            sendPacket(chat);
+
+        }
+        catch (Exception ignored) {
+
+        }
+    }
+
+
     /*
     Use this method to send titles to the player involving respawn messages and time left before they respawn.
      */
@@ -588,8 +609,6 @@ public class BattlePlayer
     public void handlePlayerIntoSpectator(@NotNull PacketHandler handler, boolean isFinal, @Nullable Player killer)
     {
         dropInventory(player.getLocation().clone(),killer);
-        teleport(arena.getSpecSpawn());
-
 
         if (!isAlive || isEliminated) {
             PlayerHelper.clearInventory(this.player);
@@ -612,11 +631,13 @@ public class BattlePlayer
                team.eliminate();
 
             if (killer !=null && sendMessage)
-                killer.sendMessage(ChatColor.YELLOW+"Items dropped from "+player.getName()+" have been put into their team's forge.");
+                killer.sendMessage(ChatColor.YELLOW+"Items dropped from "+player.getName()+"'s enderchest have been put into their team's forge.");
 
             return;
         }
 
+
+        teleport(arena.getSpecSpawn());
 
         new BukkitRunnable()
         {
@@ -686,7 +707,7 @@ public class BattlePlayer
             barManager.set(ItemHelper.toSoldItem(axe.getItem(), this), getAxe().getItem(), player);
         }
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
-        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_ITEM,player);
 
         heal();
         equipArmor();
@@ -723,7 +744,7 @@ public class BattlePlayer
         heal();
         equipArmor();
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
-        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_NAV,player);
+        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_ITEM,player);
     }
 
 
@@ -1033,11 +1054,14 @@ public class BattlePlayer
 
 
     //upgrades the axe of the player.
-    //pick is the item to upgrade the player's axe to.
+    //axe is the item to upgrade the player's axe to.
     //updates the shop to display the next upgrade after the axe.
     public synchronized void setAxeUpwards(TieredItem axe) {
+
+        System.out.println("Param: "+axe);
         this.axe = axe;
         TieredItem upgrade = ItemHelper.getNextTier(axe);
+        System.out.println("next tier: "+upgrade);
         shopManager.replaceItem(axe.getItem(),upgrade == null? axe.getItem() : upgrade.getItem());
     }
 
@@ -1168,6 +1192,10 @@ public class BattlePlayer
         return shopManager;
     }
 
+    public ChatOptionSelectionInventory getChatOptionInv() {
+        return chatOptionInv;
+    }
+
     public synchronized boolean getIsEliminated()
     {
         return this.isEliminated;
@@ -1177,13 +1205,7 @@ public class BattlePlayer
         return quickEditor;
     }
 
-    public boolean hasCompass(){
-        return hasCompass;
-    }
 
-    public void setHasCompass(boolean compass){
-        this.hasCompass = compass;
-    }
 
 
 }

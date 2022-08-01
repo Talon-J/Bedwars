@@ -10,7 +10,6 @@ import me.camm.productions.bedwars.Files.FileStreams.TeamFileReader;
 import me.camm.productions.bedwars.Files.FileStreams.WorldFileReader;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Validation.BedWarsException;
-import me.camm.productions.bedwars.Validation.RegistrationException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -170,14 +169,13 @@ public class CommandProcessor {
                     notOpposed--;
             }
             /////////////////////////////////////////////////////////////////
-            //The check for opposing teams is disabled for testing purposes only.
 
-           //    if (!(notOpposed<2)) //game can start b/c there are at least 2 teams
+        //disabled for testing only
+
+           //  if (!(notOpposed<2)) //game can start b/c there are at least 2 teams
                    runner.prepareAndStart();
-           //     else
-            //       throw new StateException("There must be opposition for a game to start!");
-
-
+            //    else
+            //        throw new StateException(ChatColor.RED+"There must be opposition for a game to start!");
 
     }
 

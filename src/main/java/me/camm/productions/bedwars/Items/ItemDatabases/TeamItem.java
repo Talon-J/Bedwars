@@ -4,7 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
 
-/**
+/*
  * @author CAMM
  * This enum is for all of the team items in the team buy inventories
  */

@@ -34,7 +34,7 @@ public class PlayerFileReader
     private final File barFile;
     private final Arena arena;
 
-    private BattlePlayer player;
+    private final BattlePlayer player;
 
 
     public PlayerFileReader(Plugin plugin, BattlePlayer player, boolean isInflated, Arena arena)
@@ -164,11 +164,11 @@ public class PlayerFileReader
                 current = reader.readLine();
             }
 
-            return new PlayerInventoryManager(items, isInflated, arena, player);
+            return new PlayerInventoryManager(items, isInflated, arena, this.player);
         }
         catch (IOException e)
         {
-            return new PlayerInventoryManager(isInflated, arena, player);
+            return new PlayerInventoryManager(isInflated, arena, this.player);
         }
 
     }

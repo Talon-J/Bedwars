@@ -11,6 +11,7 @@ import me.camm.productions.bedwars.Util.Helpers.InventoryOperationHelper;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import org.bukkit.Location;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -127,7 +128,7 @@ public class ItemListener implements Listener
                     if (current.getRawPlayer().getLocation().distanceSquared(loc) > distanceSquared)
                         continue;
 
-                        if (current.getRawPlayer().getInventory().firstEmpty() != -1 &&
+                    if (current.getRawPlayer().getInventory().firstEmpty() != -1 &&
                                 (current.getIsAlive() && !current.getIsEliminated()))
                             current.getRawPlayer().getInventory().addItem(picked);
 
@@ -161,11 +162,17 @@ public class ItemListener implements Listener
             return;
         }
 
+        if (stack.getType() == Material.COMPASS || stack.getType() == Material.SHEARS) {
+            event.setCancelled(true);
+            return;
+        }
+
         /*
         Navigators should not be dropped, but they also should not end up in the
         player inv.
          */
         if (ItemHelper.getNavigator(stack) != null) {
+
             event.getItemDrop().remove();
             return;
         }

@@ -7,6 +7,7 @@ import me.camm.productions.bedwars.Entities.ShopKeeper;
 import me.camm.productions.bedwars.Util.Helpers.ChatSender;
 import me.camm.productions.bedwars.Util.Helpers.ItemHelper;
 import net.minecraft.server.v1_8_R3.PacketPlayInUseEntity;
+import net.minecraft.server.v1_8_R3.PacketPlayInWindowClick;
 import net.minecraft.server.v1_8_R3.PacketPlayOutEntityEquipment;
 import net.minecraft.server.v1_8_R3.PacketPlayOutRemoveEntityEffect;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -78,6 +79,8 @@ public class PacketHandler extends ItemHelper
             @Override
             public void channelRead(ChannelHandlerContext channelHandlerContext, Object o) throws Exception
             {
+
+
 
                 if (o instanceof PacketPlayInUseEntity)
                 {
@@ -173,6 +176,7 @@ public class PacketHandler extends ItemHelper
                 resend a packet that gives them back, technically that should work right?
                  */
 
+
                 if (o instanceof PacketPlayOutEntityEquipment)
                 {
                     try
@@ -221,7 +225,7 @@ public class PacketHandler extends ItemHelper
                                 break TEST_INVIS;
 
 
-                                Field entityId = PacketPlayOutRemoveEntityEffect.class.getDeclaredField("a");
+                            Field entityId = PacketPlayOutRemoveEntityEffect.class.getDeclaredField("a");
                                 entityId.setAccessible(true);
                                 int entity = (int) entityId.get(packet);
                                 entityId.setAccessible(false);

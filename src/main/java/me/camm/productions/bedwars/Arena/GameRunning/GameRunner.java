@@ -6,7 +6,7 @@ import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Players.Managers.PlayerTrackerManager;
 import me.camm.productions.bedwars.Arena.Players.Scoreboards.PlayerBoard;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
-import me.camm.productions.bedwars.Items.SectionInventories.Inventories.TeamOptionInventory;
+import me.camm.productions.bedwars.Items.SectionInventories.Inventories.InventoryOptionable;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
 import me.camm.productions.bedwars.Listeners.PacketHandler;
 import me.camm.productions.bedwars.Entities.ShopKeeper;
@@ -200,7 +200,7 @@ public class GameRunner
         if (maxPlayers>2)
             isInflated = true;
 
-        TeamOptionInventory.setInflated(isInflated);
+
 
         //adding the packet handler for the invisibility, etc
         this.packetHandler = new PacketHandler(keepers, arena);
@@ -500,6 +500,7 @@ as a string.
         setRunning(false);
         npcManager.setRunning(false);
         boundaryLoader.stop();
+        trackerManager.setRunning(false);
 
         for (BattleTeam team : teams) {
             team.getForge().disableForge();

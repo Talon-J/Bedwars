@@ -55,8 +55,11 @@ public class InventoryListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event)  //for joining teams / other things
     {
 
-        if (event instanceof InventoryCreativeEvent)
+
+
+        if (event instanceof InventoryCreativeEvent) {
             return;
+        }
 
         if (event.getClickedInventory() == null) {
             return;
@@ -72,19 +75,23 @@ public class InventoryListener implements Listener {
         }
 
 
-        if (!runner.isRunning())
+        if (!runner.isRunning()) {
             return;
+        }
 
         Map<Integer, IGameInventory> monitors = battlePlayer.getAccessibleInventories();
 
         Inventory clicked = event.getClickedInventory();
         IGameInventory gameInventory = monitors.getOrDefault(clicked.hashCode(), null);
 
+
+
         if (gameInventory == null) {
          InventoryOperationHelper.handleDefaultRestrictions(event, arena);
         }
-        else
-         gameInventory.operate(event);
+        else {
+            gameInventory.operate(event);
+        }
 
 
         /////////////////////
@@ -120,8 +127,10 @@ public class InventoryListener implements Listener {
 
         IGameInventory dragged = inventories.getOrDefault(event.getInventory().hashCode(), null);
 
-        if (dragged == null)
+        if (dragged == null) {
+            InventoryOperationHelper.handleDefaultRestrictions(event, arena);
             return;
+        }
 
         dragged.operate(event);
     }

@@ -18,6 +18,7 @@ public enum InventoryName
     RANGED("Ranged"),
     POTION("Potions"),
     TRACKER("Tracker"),
+    SELECT_OPTION("Select an Option"),
     EDIT_QUICKBUY("Adding item to Quick Buy..."),
     HOTBAR_MANAGER("Hotbar Manager"),
     TRACKER_COMMS("Tracker and Communications"),

@@ -229,6 +229,7 @@ public class HotbarManager
 
     public void set(ItemStack item, ShopItem enumItem, Player player, @Nullable InventoryClickEvent event) {
 
+
         ItemCategory category = enumItem.category;
         Inventory playerInv = player.getInventory();
 
@@ -238,11 +239,6 @@ public class HotbarManager
         if (ItemHelper.isItemInvalid(item)||ItemHelper.isPlaceHolder(category)||
                 category==ARMOR||!player.isOnline())
             return;
-
-        // checks should be made prior to calling this method, since we are selling something to them.
-        if (playerInv.firstEmpty()==-1) {
-            throw new IllegalStateException("Player inventory is full!");
-        }
 
         //check if the item sold is an item with tiers.
         TieredItem enumTiered = ItemHelper.isTieredItem(enumItem);
@@ -333,6 +329,8 @@ public class HotbarManager
     }
 
     private void doNormalSet(Inventory playerInv, ShopItem enumItem, ItemStack item, Player player,@Nullable InventoryClickEvent event) {
+
+
 
         if (event != null) {
 

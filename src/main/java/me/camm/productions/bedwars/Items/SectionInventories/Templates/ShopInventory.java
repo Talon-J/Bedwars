@@ -115,6 +115,7 @@ public abstract class ShopInventory extends CraftInventoryCustom implements ISec
         boolean cancel = InventoryOperationHelper.handleClickAttempt(event, this);
            event.setCancelled(cancel);
 
+
         //if the player's inventory is the clicked inv
         if (playerInv.equals(clicked))
             return;
