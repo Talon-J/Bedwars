@@ -185,7 +185,6 @@ public class LogListener implements Listener//, IArenaChatHelper, IArenaWorldHel
 
         if (arena.isSpent()) {
             current.sendMessage(ChatColor.YELLOW+"The game is over.");
-            current.printStatistics();
             return;
         }
 
