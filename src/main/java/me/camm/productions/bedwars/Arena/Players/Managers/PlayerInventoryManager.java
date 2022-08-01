@@ -128,10 +128,9 @@ public class PlayerInventoryManager
     private void searchAndReplace(Inventory inv, ShopItem toReplace, ShopItem replacement)
     {
 
-        System.out.println("replacing");
+
 
         if (owner == null) {
-            System.out.println("owner null");
             return;
         }
 
@@ -147,8 +146,6 @@ public class PlayerInventoryManager
 
 
             if (residing.getType() == Material.WOOD_AXE) {
-                System.out.println("wood axe");
-                System.out.println("similar: "+residing.isSimilar(toBeReplaced));
             }
 
             //Enchantments can change the name, so don't use displayName().equalsIgnoreCase()...

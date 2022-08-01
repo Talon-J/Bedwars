@@ -50,7 +50,7 @@ public class ActionSelectionInventory extends CraftInventoryCustom implements IG
     @Override
     public void operate(InventoryClickEvent event) {
 
-        System.out.println("act select");
+
 
         event.setCancelled(InventoryOperationHelper.handleClickAttempt(event, this));
         Map<UUID, BattlePlayer> players = arena.getPlayers();

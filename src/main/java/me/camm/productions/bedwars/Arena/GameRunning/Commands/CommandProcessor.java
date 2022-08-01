@@ -116,7 +116,7 @@ public class CommandProcessor {
             throw getPermException(SHOUT);
 
         if (runner==null || !runner.isRunning())
-            throw new StateException("The game is not running!");
+            throw new StateException(ChatColor.RED+"The game is not running!");
         //You can't shout if the game isn't running
 
 

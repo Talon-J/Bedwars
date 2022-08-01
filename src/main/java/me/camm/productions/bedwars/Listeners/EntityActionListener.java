@@ -71,7 +71,7 @@ public class EntityActionListener implements Listener
             long millis = set.getSystemTime();
 
             //give the previous damager 10 seconds to kill the player. If the kill occurred more than 10 seconds later,
-            // then nobody gets the kill for the player.   todo make a final variable for the seconds
+            // then nobody gets the kill for the player.
             if (System.currentTimeMillis() - millis > 10000)
             {
                 victim.handlePlayerIntoSpectator(handler, isFinal);

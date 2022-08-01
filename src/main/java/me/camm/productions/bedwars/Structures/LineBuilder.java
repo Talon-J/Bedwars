@@ -246,7 +246,7 @@ public class LineBuilder
                     }
                     else
                     {
-                       // System.out.println("X segment");
+
                         currentLength = 0;
                         currentSegments++;
                     }
@@ -285,7 +285,7 @@ public class LineBuilder
                     }
                     else
                     {
-                     //   System.out.println("z segment");
+
                         currentLength = 0;
                         currentSegments++;
                     }

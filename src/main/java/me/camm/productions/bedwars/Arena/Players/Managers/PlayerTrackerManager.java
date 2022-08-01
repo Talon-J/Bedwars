@@ -136,14 +136,12 @@ public class PlayerTrackerManager implements Runnable{
 
     public void resume(){
         synchronized (lock) {
-            System.out.println("notify");
             lock.notify();
         }
     }
 
     public void addEntry(BattlePlayer player){
         synchronized (trackingEntries) {
-            System.out.println("adding player: "+player.getRawPlayer().getName());
             trackingEntries.add(player);
 
         }
