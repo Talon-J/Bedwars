@@ -19,6 +19,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 public class ExecutableBoundaryLoader implements Runnable
 {
@@ -106,19 +107,24 @@ public class ExecutableBoundaryLoader implements Runnable
 
                             BattleTeam current = null;
 
-                                for (BattleTeam team: primedTraps)
-                                {
-                                    if (!team.doesBedExist()) {
-                                        primedTraps.remove(team);
-                                        continue;
-                                    }
 
-                                    if (block.hasMetadata(team.getTeamColor().getName()))
-                                    {
-                                        current = team;
-                                        break;
-                                    }
+                            Iterator<BattleTeam> traps = primedTraps.iterator();
+                            while (traps.hasNext()) {
+                                BattleTeam team = traps.next();
+
+                                if (!team.doesBedExist()) {
+                                    primedTraps.remove(team);
+                                    continue;
                                 }
+
+                                if (block.hasMetadata(team.getTeamColor().getName()))
+                                {
+                                    current = team;
+                                    break;
+                                }
+
+                            }
+
 
                                 if (current == null)
                                     break TRAPS;
@@ -201,11 +207,12 @@ public class ExecutableBoundaryLoader implements Runnable
 
     }
 
-    public synchronized void load(BattleTeam team, boolean trap){
+    public void load(BattleTeam team, boolean trap){
         resume();
 
 
         if (trap) {
+            synchronized (primedTraps) {
             if (!primedTraps.contains(team) && team.doesBedExist()) {
 
                 for (TimeSet set: coolingTeams)
@@ -216,9 +223,13 @@ public class ExecutableBoundaryLoader implements Runnable
 
                 primedTraps.add(team);
             }
+           }
         }
-        else
-            healAuras.add(team);
+        else {
+            synchronized (healAuras) {
+                healAuras.add(team);
+            }
+        }
 
     }
 
@@ -238,8 +249,10 @@ public class ExecutableBoundaryLoader implements Runnable
             BattleTeam team = next.getTeam();
             if (team.nextTrap() != null && team.doesBedExist())
             {
-                coolingTeams.remove(0);
-                primedTraps.add(team);
+                synchronized (primedTraps) {
+                    coolingTeams.remove(0);
+                    primedTraps.add(team);
+                }
             }
             else
                 coolingTeams.remove(0);

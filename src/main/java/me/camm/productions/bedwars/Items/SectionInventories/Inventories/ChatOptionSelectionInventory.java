@@ -95,7 +95,7 @@ public class ChatOptionSelectionInventory extends InventoryOptionable {
             return;
 
         InventoryOperationHelper.handleDefaultRestrictions(event, arena);
-        if (InventoryOperationHelper.handleClickAttempt(event, this))
+        if (InventoryOperationHelper.triedToPlaceIn(event, this))
             event.setCancelled(true);
 
         ItemStack clicked = event.getCurrentItem();

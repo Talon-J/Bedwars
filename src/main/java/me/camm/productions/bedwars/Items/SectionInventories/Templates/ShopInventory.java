@@ -112,7 +112,7 @@ public abstract class ShopInventory extends CraftInventoryCustom implements ISec
 
         InventoryOperationHelper.handleDefaultRestrictions(event, arena);
 
-        boolean cancel = InventoryOperationHelper.handleClickAttempt(event, this);
+        boolean cancel = InventoryOperationHelper.triedToPlaceIn(event, this);
            event.setCancelled(cancel);
 
 

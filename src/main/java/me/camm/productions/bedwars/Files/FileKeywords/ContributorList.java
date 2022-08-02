@@ -10,7 +10,7 @@ public enum ContributorList
     CODER(new String[] {"Developer:", "CAMM_H87"}),
 
     PLAY_TEAM(new String[]{"Play Team:"}),
-    TESTING(new String[] {"General Testing:","CAMM_H87","KiwiGod888","Lachi_molala","Marcaroni_","MrTeavee","sophieeeishere"}),
+    TESTING(new String[] {"General Testing:","CAMM_H87","GR3aterG0ld","KiwiGod888","Lachi_molala","Marcaroni_","MrTeavee","sophieeeishere"}),
     MAJORS(new String[] {"Major Contributors: ","Buster_Buckaroo","CAMM_H87","KiwiGod888","Lachi_molala","Lercerpe","Marcaroni_","MrTeavee"}),
     RESEARCH(new String[] {"Research:","adithemaddy","Buster_Buckaroo", "CAMM_H87","GR3aterG0ld", "KiwiGod888", "Lercerpe", "Marcaroni_", "MrTeavee"}),
     MORALE(new String[] {"Emotional Support:","Lachi_molala","Marcaroni_","MrTeavee"}),
@@ -20,7 +20,7 @@ public enum ContributorList
             " Bedwars is originally made by the Hypixel Team. This plugin is for private educational and developmental purposes only, not for commercial use.","Idea for the challenge was initially from MrTeavee and KiwiGod888."}),
 
 
-    DATE(new String[]{"List up to date as of July 30th 2022. Plugin development started in November 2019. Core finished on Jan 23 2021, Release on ----"});
+    DATE(new String[]{"List up to date as of July 30th 2022. Plugin development started in November 2019. Core finished on Jan 23 2021, Release 1.0.0 on Aug 2 2022"});
 
     private final String[] players;
 

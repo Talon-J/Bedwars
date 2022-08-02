@@ -81,7 +81,7 @@ public class TeamJoinInventory extends CraftInventoryCustom implements IGameInve
     }
 
     public void operate(InventoryClickEvent event) {
-       boolean cancel =  InventoryOperationHelper.handleClickAttempt(event, this);
+       boolean cancel =  InventoryOperationHelper.triedToPlaceIn(event, this);
 
         if (cancel)
             event.setCancelled(true);

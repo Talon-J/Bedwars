@@ -8,7 +8,6 @@ import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
 import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.ResourceConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.TeamOptionConfig;
-import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
 
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.IGameInventory;
@@ -137,7 +136,7 @@ public abstract class InventoryOptionable extends CraftInventoryCustom implement
        BattlePlayer battlePlayer = players.getOrDefault(event.getWhoClicked().getUniqueId(), null);
 
        InventoryOperationHelper.handleDefaultRestrictions(event,arena);
-       if (InventoryOperationHelper.handleClickAttempt(event, this))
+       if (InventoryOperationHelper.triedToPlaceIn(event, this))
            event.setCancelled(true);
 
 

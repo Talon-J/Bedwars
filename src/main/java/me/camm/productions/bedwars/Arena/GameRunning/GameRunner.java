@@ -470,6 +470,8 @@ as a string.
      */
     public void attemptEndGame(){
 
+
+
         if (!isRunning)
             return;
 

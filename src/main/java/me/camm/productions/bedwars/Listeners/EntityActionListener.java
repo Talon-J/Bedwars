@@ -510,7 +510,6 @@ public class EntityActionListener implements Listener
 
         if (damager instanceof Arrow)
         {
-          //  plugin.getServer().broadcastMessage("[DEBUG] arrow hit player dmg");
             Arrow arrow = (Arrow)damager;
 
 
@@ -545,7 +544,6 @@ public class EntityActionListener implements Listener
         if (damager instanceof Fireball)
         {
             updateHistoryDamage(hurtPlayer,event);
-            plugin.getServer().broadcastMessage("[DEBUG] -DETECT - Fireball dmg");
             hurtPlayer.removeInvisibilityEffect();
 
 

@@ -129,13 +129,12 @@ public class HotbarManager
     //resets the configuration. Does not update the inventory
     public void reset(){
 
-        layout[0] = ItemCategory.MELEE;
-        addCategory(MELEE,0);
-
-        for (int slot=1;slot<layout.length;slot++) {
+        for (int slot=0;slot<layout.length;slot++) {
             layout[slot] = null;
             addCategory(null,slot);
         }
+
+        defaultConfig();
     }
 
 

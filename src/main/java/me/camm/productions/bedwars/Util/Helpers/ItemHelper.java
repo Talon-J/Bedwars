@@ -446,6 +446,9 @@ public class ItemHelper
             if (isArmor(stack.getType()))
                 return true;
 
+            if ( stack.getType() == Material.SHEARS)
+                return true;
+
             return isPick(stack) || isAxe(stack) || (isSword(stack.getType()) && isWoodenSimple(stack.getType()));
         }
 
@@ -911,7 +914,7 @@ public class ItemHelper
 
     public static boolean isItemInvalid(ItemStack item)
     {
-        return item==null||item.getItemMeta()==null;
+        return item==null||item.getItemMeta()==null||item.getType()==AIR;
     }
 
 
@@ -1302,7 +1305,7 @@ public class ItemHelper
             if (name==null)
                 continue;
 
-            if (name.equalsIgnoreCase(item.name))
+            if (name.equals(item.name))
                 return item;
 
         }

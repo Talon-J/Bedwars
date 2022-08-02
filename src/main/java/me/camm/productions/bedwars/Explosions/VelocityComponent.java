@@ -25,12 +25,15 @@ import static java.lang.Double.NaN;
 public class VelocityComponent {
     private final EntityExplodeEvent event;
     private final boolean isFireball;
+    private double range;
 
     public VelocityComponent(EntityExplodeEvent event)
     {
         this.event = event;
         Entity entity = event.getEntity();
       isFireball = entity instanceof Fireball  || entity.getType().toString().toLowerCase().contains("fireball");
+      range = isFireball? VectorParameter.FIREBALL_RANGE.getValue() : VectorParameter.TNT_RANGE.getValue();
+      range /= 2;
     }
 
 
@@ -40,12 +43,15 @@ public class VelocityComponent {
         Entity exploded = this.event.getEntity();
         Location origin = exploded.getLocation().clone();
 
-        List<Entity> nearEntities = exploded.getNearbyEntities(exploded.getLocation().getX(), exploded.getLocation().getY(), exploded.getLocation().getZ());
+        List<Entity> nearEntities = exploded.getNearbyEntities(range, range, range);
+
+
 
         for (Entity e: nearEntities) //for all of the nearby entities to the explosion..
         {
             if (!VectorToolBox.isValidVelocityType(e))   //So if the entity can be affected by velocity
                continue;
+
             constructAndImpart(origin, e.getLocation().clone(),e);
 
         }//for nearby
