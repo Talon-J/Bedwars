@@ -108,7 +108,7 @@ public class QuickChatInventory extends CraftInventoryCustom implements IGameInv
     @Override
     public void operate(InventoryClickEvent event) {
 
-        if (InventoryOperationHelper.handleClickAttempt(event, this)) {
+        if (InventoryOperationHelper.triedToPlaceIn(event, this)) {
             event.setCancelled(true);
             return;
         }

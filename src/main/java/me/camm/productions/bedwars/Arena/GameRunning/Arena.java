@@ -303,14 +303,6 @@ public class Arena
   }
 
 
-    /*
-    Use ChatSender.sendMessage() instead
-     */
-  @Deprecated
-  public void sendMessage(String message)
-  {
-      plugin.getServer().broadcastMessage(message);
-  }
 
 
   //getters

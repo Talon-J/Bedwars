@@ -56,13 +56,10 @@ public final class BedWars extends JavaPlugin
 
         plugin = this;
         ChatSender sender = ChatSender.getInstance();
-
-
-
-
         //we init it right away so that we can use it anywhere.
 
-        sender.sendConsoleMessage("STARTING UP",Level.INFO);
+
+        sender.sendConsoleMessage("Starting up!",Level.INFO);
         sender.sendConsoleMessage("It is recommended that you make a backup of this world as the game may destroy and change it.",Level.INFO);
 
        try {

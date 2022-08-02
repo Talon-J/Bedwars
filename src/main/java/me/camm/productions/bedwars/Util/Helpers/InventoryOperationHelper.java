@@ -36,11 +36,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static me.camm.productions.bedwars.Items.ItemDatabases.ShopItem.TRACKER_ITEM;
+
 
 public class InventoryOperationHelper
 {
     private enum Values {
-        SLOT, HOTBAR, MOVE, SWAP, PLACE, COLLECT
+        SLOT, HOTBAR, MOVE, SWAP, PLACE, COLLECT, DROP, PICKUP,
     }
 
 
@@ -59,6 +61,43 @@ public class InventoryOperationHelper
 
 
 
+   public static boolean triedToTakeOut(InventoryClickEvent event, Inventory restrictedInv){
+
+       InventoryAction action = event.getAction();
+       String name = action.name();
+
+       Inventory clickedInv = event.getClickedInventory();
+       Inventory topInv = event.getInventory();
+
+
+
+       //if both inventories are not possible to be restricted, then return
+       if (!topInv.equals(restrictedInv) &&
+               !event.getView().getBottomInventory().equals(restrictedInv) &&
+               !clickedInv.equals(restrictedInv)) {
+
+           return false;
+       }
+
+
+
+
+
+       if (clickedInv.equals(restrictedInv)) {
+
+           return name.contains(Values.PICKUP.name()) ||
+                   name.contains(Values.SWAP.name()) ||
+                   name.contains(Values.MOVE.name()) || name.contains(Values.HOTBAR.name());
+
+       }
+
+
+       return false;
+
+
+   }
+
+
     /*
     Returns whether a player has tried to place an item into a restricted inventory.
 
@@ -67,21 +106,20 @@ public class InventoryOperationHelper
     @author CAMM
 
      */
-    public static boolean handleClickAttempt(InventoryClickEvent event, Inventory restrictedInv)
+    public static boolean triedToPlaceIn(InventoryClickEvent event, Inventory restrictedInv)
     {
         InventoryAction action = event.getAction();
         String name = action.name();
 
-        Inventory clickedInventory = event.getClickedInventory();
-        Inventory playerInventory = event.getWhoClicked().getInventory();
-        Inventory topInventory = event.getInventory();
+        Inventory clickedInv = event.getClickedInventory();
+        Inventory topInv = event.getInventory();
 
 
 
         //if both inventories are not possible to be restricted, then return
-        if (!topInventory.equals(restrictedInv) &&
+        if (!topInv.equals(restrictedInv) &&
                 !event.getView().getBottomInventory().equals(restrictedInv) &&
-                !clickedInventory.equals(restrictedInv)) {
+                !clickedInv.equals(restrictedInv)) {
 
            return false;
         }
@@ -89,29 +127,69 @@ public class InventoryOperationHelper
 
 
 
-        //if the player tried to shift click something into the inventory
-        // (Either from the player inv -> shop,  or shop -> player inv)
-        if (event.isShiftClick() && (topInventory.equals(restrictedInv) || playerInventory.equals(restrictedInv))) {
-            return true;
+        if (event.isShiftClick()) {
+            if (topInv.equals(restrictedInv)) {
+                if (!(topInv instanceof CraftInventoryCrafting) && !clickedInv.equals(topInv)){
+
+
+
+                    return true;
+
+
+                }
+            }
+            else {
+
+                if (clickedInv.equals(topInv)) {
+
+                    return true;
+                }
+
+                //the bottom inv is the restricted one
+            }
         }
 
 
-        if (!clickedInventory.equals(restrictedInv) &&
-                !( name.contains(Values.COLLECT.name()) ||
-                        name.contains(Values.MOVE.name()) ||
-                        name.contains(Values.SWAP.name()))) {
+        if (name.contains(Values.HOTBAR.name())) {
+            int significand = topInv.getSize() -1;
+            int rawSlot = event.getRawSlot();
 
-
-            return false;
+            if (rawSlot <= significand)
+                return true;
         }
 
 
 
-        return name.contains(Values.HOTBAR.name()) ||
-                name.contains(Values.PLACE.name()) ||
-                name.contains(Values.MOVE.name()) ||
-                name.contains(Values.COLLECT.name()) ||
-                name.contains(Values.SWAP.name());
+        if (!clickedInv.equals(restrictedInv)) {
+
+            if (name.contains(Values.PLACE.name())) {
+
+                return false;
+            }
+
+
+            if (name.contains(Values.DROP.name())) {
+                return false;
+            }
+        }
+        else {
+
+
+
+            if (name.contains(Values.PLACE.name()))
+                return true;
+
+
+            if (name.contains(Values.DROP.name()))
+                return true;
+        }
+
+
+
+
+
+
+        return false;
     }
 
 
@@ -219,13 +297,12 @@ public class InventoryOperationHelper
         //the item which was on the cursor at the time of the click. Likely is now in the slot
 
 
+
+
         Map<Integer, IGameInventory> accessibleInvs = clicked.getAccessibleInventories();
 
         IGameInventory customInv = accessibleInvs.getOrDefault(topInv.hashCode(), null);
         if (customInv == null) {
-
-            ////debug here for shift clicks and collection
-
 
             handleDefaultItemRestrictions(clickedItem, cursorItem, event, topInv, playerInv);
             return;
@@ -233,15 +310,15 @@ public class InventoryOperationHelper
 
         //if they tried to place an item into their inventory, then we gotta do checks to make sure it's not
         // from the hb editor
-        if (handleClickAttempt(event, playerInv)) {
+        if (triedToPlaceIn(event, playerInv)) {
+
             if (customInv instanceof HotbarEditorInventory && ItemHelper.getNavigator(cursorItem) != null) {
                 event.setCancelled(true);
                 return;
             }
         }
 
-        if (handleClickAttempt(event, topInv)) {
-
+        if (triedToPlaceIn(event, topInv)) {
             event.setCancelled(true);
         }
 
@@ -249,30 +326,65 @@ public class InventoryOperationHelper
 
     }
 
-    //Good
+
     private static void handleDefaultItemRestrictions(ItemStack clickedItem, ItemStack cursorItem, InventoryClickEvent event, Inventory topInv, Inventory playerInv){
 
         //at this point, it could still be any inventory, but the difference is that they won't be placing into their inv,
         //they'll only be placing out into the top inv
 
 
-        Class<? extends Inventory> clazz = topInv.getClass();
-        if (!clazz.equals(CraftInventory.class) && InventoryOperationHelper.handleClickAttempt(event,topInv))
-        {
 
-            InventoryAction type = event.getAction();
-            if (clazz.equals(CraftInventoryCrafting.class) && (event.isShiftClick() || type == InventoryAction.COLLECT_TO_CURSOR)) {
+        Class<? extends Inventory> clazz = topInv.getClass();
+
+
+        if (!(clazz.equals(CraftInventory.class) || clazz.equals(CraftInventoryCrafting.class))) {
+
+            if (InventoryOperationHelper.triedToPlaceIn(event, topInv)) {
+
+                event.setCancelled(true);
                 return;
             }
-
-
-            event.setCancelled(true);
-            return;
         }
 
 
-        if (ItemHelper.isInventoryPlaceRestrict(cursorItem) || ItemHelper.isInventoryPlaceRestrict(clickedItem)) {
-            if (InventoryOperationHelper.handleClickAttempt(event, topInv)) {
+        ItemStack trackStack = ItemHelper.toSimpleItem(TRACKER_ITEM.sellMaterial,TRACKER_ITEM.name);
+
+
+
+
+        if (event.getHotbarButton() != -1) {
+            ItemStack hotbar = playerInv.getItem(event.getHotbarButton());
+
+            int significand = event.getView().getTopInventory().getSize()-1;
+            int raw = event.getRawSlot();
+
+
+
+            if (hotbar != null && hotbar.isSimilar(trackStack)) {
+
+                if (raw <= significand) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+            else if (ItemHelper.isInventoryPlaceRestrict(hotbar)) {
+                if (raw <= significand) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
+
+        boolean trackSimilar = trackStack.isSimilar(clickedItem) || trackStack.isSimilar(cursorItem);
+
+        if (ItemHelper.isInventoryPlaceRestrict(cursorItem) ||
+                ItemHelper.isInventoryPlaceRestrict(clickedItem) || trackSimilar
+        ) {
+
+
+
+            if (InventoryOperationHelper.triedToPlaceIn(event, topInv)) {
                 event.setCancelled(true);
                 return;
             }
@@ -283,9 +395,30 @@ public class InventoryOperationHelper
             }
 
             if (event.getClickedInventory().equals(playerInv) && armor) {
+
                 event.setCancelled(true);
+                return;
             }
         }
+
+
+        if (clazz.equals(CraftInventoryCrafting.class)) {
+
+            InventoryAction action = event.getAction();
+            String name = action.name().toLowerCase();
+
+            boolean place = (name.contains("hotbar") || name.contains("move") || name.contains("place"))
+                    && event.getClickedInventory().equals(topInv);
+
+            if (place)
+                event.setCancelled(true);
+
+
+
+            //we need to check if it is placing into the crafting inv.
+        }
+
+
     }
 
 
@@ -433,7 +566,7 @@ public class InventoryOperationHelper
         BattleTeam team = clicked.getTeam();
         IGameInventory teamInventory = team.getTeamInventory();
 
-        if (event.getClickedInventory().equals(teamInventory) || handleClickAttempt(event,(Inventory)teamInventory)) {
+        if (event.getClickedInventory().equals(teamInventory) || triedToPlaceIn(event,(Inventory)teamInventory)) {
             event.setCancelled(true);
         }
 
@@ -572,20 +705,61 @@ public class InventoryOperationHelper
          */
 
 
+
         BattlePlayer clicked = arena.getPlayers().getOrDefault(event.getWhoClicked().getUniqueId(),null);
          if (clicked == null)
              return;
 
 
+         Inventory playerInv = clicked.getRawPlayer().getInventory();
+
+        int slot = event.getSlot();
+        boolean hotbar = event.getAction().name().toLowerCase().contains("hotbar");
+
+
+         if (InventoryOperationHelper.triedToPlaceIn(event, clicked.getRawPlayer().getInventory())) {
+
+
+
+             ItemStack question = event.getClickedInventory().getItem(event.getSlot());
+
+
+             if (ItemHelper.getNavigator(question) != null) {
+
+                 event.setCancelled(true);
+                 return;
+             }
+         }
+
+
+
+
         HotbarManager manager = clicked.getBarManager();
         Inventory clickedInv = event.getClickedInventory();
 
-        int slot = event.getSlot();
 
         ItemStack cursor = event.getCursor();
 
          if (cursor == null || cursor.getType()==Material.AIR)
          {
+
+             if (hotbar) {
+                 ItemStack hotbarItem = playerInv.getItem(event.getHotbarButton());
+
+                 int significand = event.getView().getTopInventory().getSize();
+                 int rawSlot= event.getRawSlot();
+
+                 if (rawSlot <= significand) {
+                     event.setCancelled(true);
+                     return;
+                 }
+
+
+             }
+
+
+
+
 
              if (HotbarManager.slotInRangeTake(slot))
              {
@@ -704,7 +878,7 @@ public class InventoryOperationHelper
 
 
         //also need to account for dragging
-        if (handleClickAttempt(event, display)) {
+        if (triedToPlaceIn(event, display)) {
             event.setCancelled(true);
         }
 

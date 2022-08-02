@@ -3,7 +3,6 @@ package me.camm.productions.bedwars.Items.SectionInventories.Inventories;
 
 import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
-import me.camm.productions.bedwars.BedWars;
 import me.camm.productions.bedwars.Items.SectionInventories.InventoryConfigurations.ActionSelectionConfig;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryName;
 import me.camm.productions.bedwars.Items.SectionInventories.Templates.InventoryProperty;
@@ -15,8 +14,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Map;
 import java.util.UUID;
@@ -52,7 +49,7 @@ public class ActionSelectionInventory extends CraftInventoryCustom implements IG
 
 
 
-        event.setCancelled(InventoryOperationHelper.handleClickAttempt(event, this));
+        event.setCancelled(InventoryOperationHelper.triedToPlaceIn(event, this));
         Map<UUID, BattlePlayer> players = arena.getPlayers();
 
         UUID id = event.getWhoClicked().getUniqueId();

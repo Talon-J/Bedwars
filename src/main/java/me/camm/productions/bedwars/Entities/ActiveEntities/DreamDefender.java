@@ -4,6 +4,7 @@ import me.camm.productions.bedwars.Arena.GameRunning.Arena;
 import me.camm.productions.bedwars.Arena.Players.BattlePlayer;
 import me.camm.productions.bedwars.Arena.Players.DeathMessages.Cause;
 import me.camm.productions.bedwars.Arena.Teams.BattleTeam;
+import me.camm.productions.bedwars.Arena.Teams.TeamColor;
 import me.camm.productions.bedwars.Entities.ActiveEntities.Hierarchy.ILifeTimed;
 import me.camm.productions.bedwars.Listeners.EntityActionListener;
 import org.bukkit.Location;
@@ -84,7 +85,7 @@ public class DreamDefender implements ILifeTimed
 
                     if (golem.getTarget()!=null && target != null) {
                         if (golem.getTarget().equals(target.getRawPlayer()) && target.getIsAlive())
-                        break TARGET;
+                            break TARGET;
                     }
                     target = null;
                     golem.setTarget(null);
@@ -112,7 +113,7 @@ public class DreamDefender implements ILifeTimed
 
 
 
-                golem.setCustomName(team.getTeamColor().getChatColor()+""+team.getTeamColor().getName()+getType()+" ["+timeLeft+"]");
+                golem.setCustomName(team.getTeamColor().getChatColor()+""+team.getTeamColor().getName()+" "+getType()+" ["+timeLeft+"]");
                 timeLeft --;
             }
         }.runTaskTimer(arena.getPlugin(),0,20);
@@ -122,7 +123,7 @@ public class DreamDefender implements ILifeTimed
     @Override
     public void handleEntityTarget(Entity toTarget) {
         if (toTarget instanceof LivingEntity)
-        golem.setTarget((LivingEntity) toTarget);
+         golem.setTarget((LivingEntity) toTarget);
 
     }
 
@@ -169,7 +170,8 @@ public class DreamDefender implements ILifeTimed
 
                     golem = arena.getWorld().spawn(spawning,IronGolem.class);
                     golem.setPlayerCreated(false);
-                    golem.setCustomName(team.getTeamColor().getChatColor()+""+team.getTeamColor().getName()+getType());
+                    TeamColor color = team.getTeamColor();
+                    golem.setCustomName(color.getChatColor()+color.getName()+" "+getType());
                     golem.setHealth(20);
                     register();
                     cancel();

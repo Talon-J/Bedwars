@@ -76,7 +76,7 @@ public class ItemListener implements Listener
         if (!players.containsKey(id))
             return;
 
-            BattlePlayer player = players.get(id);
+        BattlePlayer player = players.get(id);
 
             if (!player.getIsAlive() || player.getIsEliminated())
             {
@@ -148,13 +148,23 @@ public class ItemListener implements Listener
         if (!registered.containsKey(player.getUniqueId()))
             return;
 
+
+
         Item dropped = event.getItemDrop();
 
         ItemStack stack = dropped.getItemStack();
-        if (stack==null || stack.getItemMeta() == null)
+        if (ItemHelper.isItemInvalid(stack))
             return;
 
         BattlePlayer current = registered.get(player.getUniqueId());
+
+        if (!current.getIsAlive()) {
+            event.setCancelled(true);
+            return;
+        }
+
+
+
         ShopItem item = ItemHelper.getAssociate(stack);
 
         if ( (ItemHelper.isAxe(stack) || ItemHelper.isPick(stack))) {

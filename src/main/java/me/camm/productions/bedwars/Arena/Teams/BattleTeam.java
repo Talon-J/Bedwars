@@ -291,6 +291,8 @@ public class BattleTeam
      */
     public synchronized void eliminate()
     {
+
+
         if (this.isEliminated)
             return;
 

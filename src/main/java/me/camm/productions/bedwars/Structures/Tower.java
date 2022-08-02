@@ -142,7 +142,6 @@ public class Tower
                     }
 
                     heightLocation.setY(heightLocation.getBlockY()+1);
-                    player.sendMessage(heightLocation.getBlockX()+"||"+heightLocation.getBlockY()+"||"+heightLocation.getBlockZ());
                     currentHeight++;
                 }
                 else
@@ -222,32 +221,32 @@ A yaw of 270 represents the positive x direction. [E]
         {
             zBaseLength = BASE_WIDTH.getMeasurement();  //2
             xBaseLength = BASE_LENGTH.getMeasurement();  //3
-            player.sendMessage("[DEBUG]A: yaw:"+yaw);
+
         }
         else
         {
             zBaseLength = BASE_LENGTH.getMeasurement(); //3
             xBaseLength = BASE_WIDTH.getMeasurement();  //2
-            player.sendMessage("[DEBUG]B: yaw:"+yaw);
+
         }
 
 
         if (yaw>AngledDirection.THREE_FIFTEEN.dir||yaw<AngledDirection.ONE_THIRTY_FIVE.dir) { ///////////CHANGED NEG AND POS
-            player.sendMessage("[DEBUG]x pos");
+
             xDirection = POSITIVE.getMeasurement();
         }
         else {
             xDirection = NEGATIVE.getMeasurement();
-            player.sendMessage("[DEBUG]x neg");
+
         }
 
 
         if (yaw>AngledDirection.FORTY_FIVE.dir&&yaw<AngledDirection.TWO_TWENTY_FIVE.dir) {
-            player.sendMessage("[DEBUG]z pos");
+
             zDirection = POSITIVE.getMeasurement();
         }
         else {
-            player.sendMessage("[DEBUG]z neg");
+
             zDirection = NEGATIVE.getMeasurement();
         }
 

@@ -60,7 +60,7 @@ public class BedBug implements ILifeTimed
             @Override
             public void run() {
                 bug = world.spawn(loc,Silverfish.class);
-                bug.setCustomName(chatColor+teamName+getType());
+                bug.setCustomName(chatColor+teamName+" "+getType());
                 bug.setCustomNameVisible(true);
                 register();
                 cancel();
@@ -77,7 +77,7 @@ public class BedBug implements ILifeTimed
     public synchronized void handleEntityTarget(Entity toTarget)
     {
         if (toTarget instanceof LivingEntity)
-        bug.setTarget((LivingEntity)toTarget);
+         bug.setTarget((LivingEntity)toTarget);
     }
 
 
@@ -117,7 +117,7 @@ public class BedBug implements ILifeTimed
                 {
                     if (bug.getTarget()!=null&&target!=null) {
                         if (bug.getTarget().equals(target.getRawPlayer()) && target.getIsAlive())
-                        break TARGET;
+                         break TARGET;
                     }
                     bug.setTarget(null);
                             target = null;

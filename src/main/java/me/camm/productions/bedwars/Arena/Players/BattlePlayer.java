@@ -23,6 +23,7 @@ import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -42,6 +43,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import static me.camm.productions.bedwars.Arena.Players.Scoreboards.ScoreBoardHeader.*;
+import static me.camm.productions.bedwars.Items.ItemDatabases.ShopItem.TRACKER_ITEM;
 
 
 /*
@@ -600,6 +602,9 @@ public class BattlePlayer
      */
     public void handlePlayerIntoSpectator(@NotNull PacketHandler handler, boolean isFinal, @Nullable Player killer)
     {
+
+
+
         dropInventory(player.getLocation().clone(),killer);
 
         if (!isAlive || isEliminated) {
@@ -699,7 +704,7 @@ public class BattlePlayer
             barManager.set(ItemHelper.toSoldItem(axe.getItem(), this), getAxe().getItem(), player);
         }
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
-        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_ITEM,player);
+        barManager.set(ItemHelper.toSimpleItem(TRACKER_ITEM.sellMaterial, TRACKER_ITEM.name), TRACKER_ITEM,player);
 
         heal();
         equipArmor();
@@ -736,7 +741,7 @@ public class BattlePlayer
         heal();
         equipArmor();
         barManager.set(ItemHelper.toSoldItem(ShopItem.WOODEN_SWORD,this), ShopItem.WOODEN_SWORD,player);
-        barManager.set(ItemHelper.toBarItem(ItemCategory.TRACKER),ShopItem.TRACKER_ITEM,player);
+        barManager.set(ItemHelper.toSimpleItem(TRACKER_ITEM.sellMaterial, TRACKER_ITEM.name), TRACKER_ITEM,player);
     }
 
 
@@ -786,6 +791,9 @@ public class BattlePlayer
     public void dropInventory(final Location deathLocation, final Player killer)
     {
         Inventory inv = player.getInventory();
+
+        org.bukkit.inventory.ItemStack stack  = player.getItemOnCursor().clone();
+        player.setItemOnCursor(null);
         new BukkitRunnable()
         {
             @Override
@@ -793,6 +801,11 @@ public class BattlePlayer
             {
                 World w = player.getWorld();
                 final Location dropLocation = (killer == null ? deathLocation : killer.getLocation()).clone();
+
+                if (stack != null && stack.getItemMeta() != null) {
+                    org.bukkit.entity.Item drop = w.dropItem(dropLocation,stack);
+                    drop.setPickupDelay(0);
+                }
 
                 Arrays.stream(inv.getContents()).filter(item -> Objects.nonNull(item)&&ItemHelper.isCurrencyItem(item)).forEach(item -> {
                     org.bukkit.entity.Item drop = w.dropItem(dropLocation,item);

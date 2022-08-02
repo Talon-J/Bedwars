@@ -153,7 +153,7 @@ public class ExplosionHandler implements Listener
                         ((LivingEntity) entity).damage(event.getFinalDamage(), exploded);
                     }
                     entity.setLastDamageCause(event);
-                    return;
+                    continue;
                 }
 
                 if (arena.getPlayers().containsKey(entity.getUniqueId())) {

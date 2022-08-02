@@ -75,7 +75,7 @@ public enum ShopItem
     //Navigational and utility items
     SEPARATOR(1, 1, Material.STAINED_GLASS_PANE, Material.AIR, ChatColor.DARK_GRAY+"\u21e7 Categories "+ChatColor.GRAY+"\u21e9 Items", ItemCategory.SEPARATOR, false, false, 0),
     EMPTY_SLOT(1, 1, Material.STAINED_GLASS_PANE, Material.STAINED_GLASS_PANE, ChatColor.GOLD + "Empty Slot", NONE, true, false, 0),
-   // TRACKER_NAV(1,1,Material.COMPASS,Material.AIR,ChatColor.GOLD+"Tracker",TRACKER,false, false, 0),
+    TRACKER_NAV(1,1,Material.COMPASS,Material.AIR,ChatColor.GOLD+"Tracker",NAV,false, false, 0),
     BLOCKS_NAV(1, 1, Material.HARD_CLAY, Material.AIR, ChatColor.DARK_GREEN+"Blocks", NAV, false, false, 0),
     MELEE_NAV(1, 1, Material.GOLD_SWORD, Material.AIR, ChatColor.DARK_AQUA+"Melee", NAV, false, false, 0),
     ARMOR_NAV(1, 1, Material.CHAINMAIL_BOOTS, Material.AIR, ChatColor.YELLOW+"Armor", NAV, false, false, 0),
