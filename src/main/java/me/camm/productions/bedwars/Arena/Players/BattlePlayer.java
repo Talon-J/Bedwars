@@ -792,7 +792,7 @@ public class BattlePlayer
     {
         Inventory inv = player.getInventory();
 
-        org.bukkit.inventory.ItemStack stack  = player.getItemOnCursor().clone();
+        org.bukkit.inventory.ItemStack stack  = player.getItemOnCursor();
         player.setItemOnCursor(null);
         new BukkitRunnable()
         {
